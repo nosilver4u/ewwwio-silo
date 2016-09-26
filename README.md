@@ -1,5 +1,6 @@
 #EWWW Image Optimizer - SILO edition
-[Donate link](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MKMQKCBFFG3WW)
+[Donate](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MKMQKCBFFG3WW)
+
 License: GPLv3
 
 This is a port of the EWWW Image Optimizer plugin for WordPress that reduces image sizes in standalone (SILO) mode using lossless/lossy methods and image format conversion. It is currently in Alpha status, and contains copious amount of the WP code still. Some of that is intential, like the port of the wpdb class to interface with SQLite3, but some just needs cleaning.
