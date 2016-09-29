@@ -27,8 +27,7 @@ function ewww_image_optimizer_exec_init() {
 	// Check if this is an unsupported OS (not Linux or Mac OSX or FreeBSD or Windows or SunOS)
 	} elseif ( 'Linux' != PHP_OS && 'Darwin' != PHP_OS && 'FreeBSD' != PHP_OS && 'WINNT' != PHP_OS && 'SunOS' != PHP_OS ) {
 		// call the function to display a notice
-		add_action('network_admin_notices', 'ewww_image_optimizer_notice_os');
-		add_action('admin_notices', 'ewww_image_optimizer_notice_os');
+		ewww_image_optimizer_notice_os();
 		// turn off all the tools
 		ewwwio_debug_message( 'unsupported OS, disabling tools: ' . PHP_OS );
 		ewww_image_optimizer_disable_tools();
@@ -80,13 +79,7 @@ function ewww_image_optimizer_set_defaults() {
 // tells the user they are on an unsupported operating system
 function ewww_image_optimizer_notice_os() {
 	ewwwio_debug_message( '<b>' . __FUNCTION__ . '()</b>' );
-	echo "<div id='ewww-image-optimizer-warning-os' class='error'><p><strong>" . esc_html__('EWWW Image Optimizer is supported on Linux, FreeBSD, Mac OSX, and Windows', EWWW_IMAGE_OPTIMIZER_DOMAIN) . ".</strong> " . sprintf(esc_html__('Unfortunately, the EWWW Image Optimizer plugin does not work with %s', EWWW_IMAGE_OPTIMIZER_DOMAIN), htmlentities(PHP_OS)) . ".</p></div>";
-}
-
-// inform the user that only ewww-image-optimizer-cloud is permitted on WP Engine
-function ewww_image_optimizer_notice_wpengine() {
-	ewwwio_debug_message( '<b>' . __FUNCTION__ . '()</b>' );
-	echo "<div id='ewww-image-optimizer-warning-wpengine' class='error'><p>" . esc_html__('The regular version of the EWWW Image Optimizer plugin is not permitted on WP Engine sites. However, the cloud version has been approved by WP Engine. Please deactivate EWWW Image Optimizer and install EWWW Image Optimizer Cloud to optimize your images.', EWWW_IMAGE_OPTIMIZER_DOMAIN) . "</p></div>";
+	EWWWIO_CLI::warning( __('EWWW Image Optimizer is supported on Linux, FreeBSD, Mac OSX, and Windows', EWWW_IMAGE_OPTIMIZER_DOMAIN) . ". " . sprintf( __('Unfortunately, the EWWW Image Optimizer plugin does not work with %s', EWWW_IMAGE_OPTIMIZER_DOMAIN), PHP_OS ) . "." );
 }
 
 // generates the source and destination paths for the executables that we bundle with the plugin based on the operating system
@@ -206,7 +199,7 @@ function ewww_image_optimizer_check_permissions( $file, $minimum ) {
 }
 
 function ewww_image_optimizer_tool_folder_notice() {
-	echo "<div id='ewww-image-optimizer-warning-tool-install' class='error'><p><strong>" . esc_html__('EWWW Image Optimizer could not create the tool folder', EWWW_IMAGE_OPTIMIZER_DOMAIN) . ": " . htmlentities(EWWW_IMAGE_OPTIMIZER_TOOL_PATH) . ".</strong> " . esc_html__('Please adjust permissions or create the folder', EWWW_IMAGE_OPTIMIZER_DOMAIN) . ".</p></div>";
+	EWWWIO_CLI::warning( __('EWWW Image Optimizer could not create the tool folder', EWWW_IMAGE_OPTIMIZER_DOMAIN) . ": " . EWWW_IMAGE_OPTIMIZER_TOOL_PATH . ". " . __('Please adjust permissions or create the folder', EWWW_IMAGE_OPTIMIZER_DOMAIN) . "." );
 }
 
 function ewww_image_optimizer_tool_folder_permissions_notice() {
@@ -1169,7 +1162,7 @@ function ewww_image_optimizer( $file, $gallery_type = 4, $converted = false, $ne
 	ewwwio_debug_message( '<b>' . __FUNCTION__ . '()</b>' );
 	// if the plugin gets here without initializing, we need to run through some things first
 	if ( ! defined( 'EWWW_IMAGE_OPTIMIZER_CLOUD' ) ) {
-		ewww_image_optimizer_init();
+		ewww_image_optimizer_cloud_init();
 	}
 	session_write_close();
 	$bypass_optimization = apply_filters( 'ewww_image_optimizer_bypass', false, $file );
@@ -1381,8 +1374,7 @@ function ewww_image_optimizer( $file, $gallery_type = 4, $converted = false, $ne
 			// if optimization is turned ON
 			if ( $optimize ) {
 				ewwwio_debug_message( 'attempting to optimize JPG...' );
-				// generate temporary file-names:
-				$tempfile = $file . ".tmp"; //non-progressive jpeg
+				// generate temporary file-name:
 				$progfile = $file . ".prog"; // progressive jpeg
 				// check to see if we are supposed to strip metadata (badly named)
 				if ( ewww_image_optimizer_get_option( 'ewww_image_optimizer_jpegtran_copy' ) && ! $keep_metadata ) {
@@ -1392,51 +1384,22 @@ function ewww_image_optimizer( $file, $gallery_type = 4, $converted = false, $ne
 					// copy all the metadata
 					$copy_opt = 'all';
 				}
-				// run jpegtran - non-progressive
-				exec( "$nice " . $tools['JPEGTRAN'] . " -copy $copy_opt -optimize -outfile " . ewww_image_optimizer_escapeshellarg( $tempfile ) . " " . ewww_image_optimizer_escapeshellarg( $file ) );
 				// run jpegtran - progressive
 				exec( "$nice " . $tools['JPEGTRAN'] . " -copy $copy_opt -optimize -progressive -outfile " . ewww_image_optimizer_escapeshellarg( $progfile ) . " " . ewww_image_optimizer_escapeshellarg( $file ) );
-				// check the filesize of the non-progressive JPG
-				$non_size = ewww_image_optimizer_filesize( $tempfile );
 				// check the filesize of the progressive JPG
-				$prog_size = ewww_image_optimizer_filesize( $progfile );
-				ewwwio_debug_message( "optimized JPG (non-progresive) size: $non_size" );
-				ewwwio_debug_message( "optimized JPG (progresive) size: $prog_size" );
-				if ( $non_size === false || $prog_size === false ) {
-					$result = __( 'Unable to write file', EWWW_IMAGE_OPTIMIZER_DOMAIN );
-					$new_size = 0;
-				} elseif ( ! $non_size || ! $prog_size) {
-					$result = __( 'Optimization failed', EWWW_IMAGE_OPTIMIZER_DOMAIN );
-					$new_size = 0;
-				} else {
-					// if the progressive file is bigger
-					if ( $prog_size > $non_size ) {
-						// store the size of the non-progessive JPG
-						$new_size = $non_size;
-						if ( is_file( $progfile ) ) {
-							// delete the progressive file
-							unlink( $progfile );
-						}
-					// if the progressive file is smaller or the same
-					} else {
-						// store the size of the progressive JPG
-						$new_size = $prog_size;
-						// replace the non-progressive with the progressive file
-						rename($progfile, $tempfile);
-					}
-				}
+				$new_size = ewww_image_optimizer_filesize( $progfile );
 				ewwwio_debug_message( "optimized JPG size: $new_size" );
 				// if the best-optimized is smaller than the original JPG, and we didn't create an empty JPG
-				if ( $orig_size > $new_size && $new_size != 0 && ewww_image_optimizer_mimetype($tempfile, 'i') == $type ) {
+				if ( $orig_size > $new_size && $new_size != 0 && ewww_image_optimizer_mimetype($progfile, 'i') == $type ) {
 					// replace the original with the optimized file
-					rename($tempfile, $file);
+					rename($progfile, $file);
 					// store the results of the optimization
 					$result = "$orig_size vs. $new_size";
 				// if the optimization didn't produce a smaller JPG
 				} else {
-					if ( is_file( $tempfile ) ) {
+					if ( is_file( $progfile ) ) {
 						// delete the optimized file
-						unlink($tempfile);
+						unlink($progfile);
 					}
 					// store the results
 					$result = 'unchanged';
@@ -1813,8 +1776,7 @@ function ewww_image_optimizer( $file, $gallery_type = 4, $converted = false, $ne
 				}
 				// next we need to optimize that JPG if jpegtran is enabled
 				if ( ewww_image_optimizer_get_option( 'ewww_image_optimizer_jpg_level' ) == 10 && file_exists( $jpgfile ) ) {
-					// generate temporary file-names:
-					$tempfile = $jpgfile . ".tmp"; //non-progressive jpeg
+					// generate temporary file-name:
 					$progfile = $jpgfile . ".prog"; // progressive jpeg
 					// check to see if we are supposed to strip metadata (badly named)
 					if ( ewww_image_optimizer_get_option( 'ewww_image_optimizer_jpegtran_copy' ) && ! $keep_metadata ){
@@ -1824,44 +1786,21 @@ function ewww_image_optimizer( $file, $gallery_type = 4, $converted = false, $ne
 						// copy all the metadata
 						$copy_opt = 'all';
 					}
-					// run jpegtran - non-progressive
-					exec( "$nice " . $tools['JPEGTRAN'] . " -copy $copy_opt -optimize -outfile " . ewww_image_optimizer_escapeshellarg( $tempfile ) . " " . ewww_image_optimizer_escapeshellarg( $jpgfile ) );
 					// run jpegtran - progressive
 					exec( "$nice " . $tools['JPEGTRAN'] . " -copy $copy_opt -optimize -progressive -outfile " . ewww_image_optimizer_escapeshellarg( $progfile ) . " " . ewww_image_optimizer_escapeshellarg( $jpgfile ) );
-					// check the filesize of the non-progressive JPG
-					$non_size = ewww_image_optimizer_filesize( $tempfile );
-					ewwwio_debug_message( "non-progressive JPG filesize: $non_size" );
 					// check the filesize of the progressive JPG
-					$prog_size = ewww_image_optimizer_filesize( $progfile );
-					ewwwio_debug_message( "progressive JPG filesize: $prog_size" );
-					// if the progressive file is bigger
-					if ($prog_size > $non_size) {
-						// store the size of the non-progessive JPG
-						$opt_jpg_size = $non_size;
-						if (is_file($progfile)) {
-							// delete the progressive file
-							unlink($progfile);
-						}
-						ewwwio_debug_message( 'keeping non-progressive JPG' );
-					// if the progressive file is smaller or the same
-					} else {
-						// store the size of the progressive JPG
-						$opt_jpg_size = $prog_size;
-						// replace the non-progressive with the progressive file
-						rename( $progfile, $tempfile );
-						ewwwio_debug_message( 'keeping progressive JPG' );
-					}
+					$opt_jpg_size = ewww_image_optimizer_filesize( $progfile );
 					// if the best-optimized is smaller than the original JPG, and we didn't create an empty JPG
 					if ( $jpg_size > $opt_jpg_size && $opt_jpg_size != 0 ) {
 						// replace the original with the optimized file
-						rename( $tempfile, $jpgfile );
+						rename( $progfile, $jpgfile );
 						// store the size of the optimized JPG
 						$jpg_size = $opt_jpg_size;
 						ewwwio_debug_message( 'optimized JPG was smaller than un-optimized version' );
 					// if the optimization didn't produce a smaller JPG
-					} elseif ( is_file( $tempfile ) ) {
+					} elseif ( is_file( $progfile ) ) {
 						// delete the optimized file
-						unlink( $tempfile );
+						unlink( $progfile );
 					}
 				} 
 				ewwwio_debug_message( "converted JPG size: $jpg_size" );

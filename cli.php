@@ -1,4 +1,11 @@
 <?php
+if ( empty( $argv ) ) {
+	echo "This can only be run from the command-line.";
+	die;
+}
+if ( ! defined( 'EWWW_CLI' ) ) {
+	define( 'EWWW_CLI', true );
+}
 if ( ! defined( 'ABSPATH' ) ) {
 	define( 'ABSPATH', dirname( __file__ ) . '/' );
 }
@@ -10,6 +17,9 @@ require( ABSPATH . 'ewww-image-optimizer.php' );
 require( ABSPATH . 'wp-db.php' );
 require( ABSPATH . 'silo.php' );
 require( ABSPATH . 'iocli.php' );
+require( ABSPATH . 'classes/Requests/library/Requests.php' );
+Requests::register_autoloader();
+
 $args = $ewwwio_cli->parse_args();
 //print_r( $args );
 //echo "\n";

@@ -201,7 +201,7 @@ function ewww_image_optimizer_admin_init() {
 			$_POST['ewww_image_optimizer_disable_pngout'] = ( empty( $_POST['ewww_image_optimizer_disable_pngout'] ) ? false : true );
 			update_option( 'ewww_image_optimizer_disable_pngout', $_POST['ewww_image_optimizer_disable_pngout'] );
 			// TODO: display the confirmation for saving settings
-			add_action('network_admin_notices', 'ewww_image_optimizer_network_settings_saved');
+			ewww_image_optimizer_network_settings_saved(); // rename this without 'network'
 		}
 
 	ewww_image_optimizer_exec_init();
@@ -212,35 +212,6 @@ function ewww_image_optimizer_admin_init() {
 	add_action('admin_enqueue_scripts', 'ewww_image_optimizer_progressbar_style'); 
 	ewwwio_memory( __FUNCTION__ );
 //	ewww_image_optimizer_debug_log();
-}
-
-// setup wp_cron tasks for scheduled and deferred optimization
-function ewww_image_optimizer_cron_setup( $event ) {
-	ewwwio_debug_message( '<b>' . __FUNCTION__ . '()</b>' );
-	// setup scheduled optimization if the user has enabled it, and it isn't already scheduled
-	if ( ewww_image_optimizer_get_option( $event ) == TRUE && ! wp_next_scheduled( $event ) ) {
-		ewwwio_debug_message( "scheduling $event" );
-		wp_schedule_event( time(), apply_filters( 'ewww_image_optimizer_schedule', 'hourly', $event ), $event );
-	} elseif ( ewww_image_optimizer_get_option( $event ) == TRUE ) {
-		ewwwio_debug_message( "$event already scheduled: " . wp_next_scheduled( $event ) );
-	} elseif ( wp_next_scheduled( $event ) ) {
-		ewwwio_debug_message( "un-scheduling $event" );
-		wp_clear_scheduled_hook( $event );
-		if ( ! function_exists( 'is_plugin_active_for_network' ) && is_multisite() ) {
-			// need to include the plugin library for the is_plugin_active function
-			require_once( ABSPATH . 'wp-admin/includes/plugin.php' );
-		}
-		if ( is_multisite() && is_plugin_active_for_network( EWWW_IMAGE_OPTIMIZER_PLUGIN_FILE_REL ) ) {
-			global $wpdb;
-			$query = $wpdb->prepare( "SELECT blog_id FROM $wpdb->blogs WHERE site_id = %d", $wpdb->siteid );
-			$blogs = $wpdb->get_results( $query, ARRAY_A );
-			foreach ( $blogs as $blog ) {
-				switch_to_blog( $blog['blog_id'] );
-				wp_clear_scheduled_hook( $event );
-			}
-			restore_current_blog();
-		}
-	}
 }
 
 // sets all the tool constants to false
@@ -1239,137 +1210,92 @@ function ewww_image_optimizer_cloud_enable() {
 }
 
 // adds our version to the useragent for http requests
-function ewww_image_optimizer_cloud_useragent( $useragent ) {
-	$useragent .= ' EWWW/' . EWWW_IMAGE_OPTIMIZER_VERSION . ' ';
-	ewwwio_memory( __FUNCTION__ );
-	return $useragent;
+function ewww_image_optimizer_cloud_useragent() {
+	return 'EWWW SILO/' . EWWW_IMAGE_OPTIMIZER_VERSION;
 }
 
 // submits the api key for verification
 function ewww_image_optimizer_cloud_verify( $cache = true, $api_key = '' ) {
 	ewwwio_debug_message( '<b>' . __FUNCTION__ . '()</b>' );
-	if ( empty( $api_key ) && ! ( ! empty( $_REQUEST['option_page'] ) && $_REQUEST['option_page'] == 'ewww_image_optimizer_options' ) ) {
+	if ( empty( $api_key ) ) {
 		$api_key = ewww_image_optimizer_get_option( 'ewww_image_optimizer_cloud_key' );
 	} elseif ( empty( $api_key ) && ! empty( $_POST['ewww_image_optimizer_cloud_key'] ) ) {
 		$api_key = $_POST['ewww_image_optimizer_cloud_key'];
 	}
 	if ( empty( $api_key ) ) {
+		ewwwio_debug_message( $api_key );
 		if ( ewww_image_optimizer_get_option( 'ewww_image_optimizer_jpg_level' ) > 10 ) {
-			update_site_option( 'ewww_image_optimizer_jpg_level', 10 );
 			update_option( 'ewww_image_optimizer_jpg_level', 10 );
 		}
 		if ( ewww_image_optimizer_get_option( 'ewww_image_optimizer_png_level' ) > 10 && ewww_image_optimizer_get_option( 'ewww_image_optimizer_png_level' ) != 40 ) {
-			update_site_option( 'ewww_image_optimizer_png_level', 10 );
 			update_option( 'ewww_image_optimizer_png_level', 10 );
 		}
 		if ( ewww_image_optimizer_get_option( 'ewww_image_optimizer_pdf_level' ) > 0 ) {
-			update_site_option( 'ewww_image_optimizer_pdf_level', 0 );
 			update_option( 'ewww_image_optimizer_pdf_level', 0 );
 		}
 		return false;
 	}
-	add_filter( 'http_headers_useragent', 'ewww_image_optimizer_cloud_useragent' );
 	$ewww_cloud_status = get_transient( 'ewww_image_optimizer_cloud_status' );
-	$ewww_cloud_ip = get_transient( 'ewww_image_optimizer_cloud_ip' );
-	$ewww_cloud_transport = get_transient( 'ewww_image_optimizer_cloud_transport' );
-	if ( ! ewww_image_optimizer_detect_wpsf_location_lock() && $cache && preg_match( '/^(\d{1,3}\.){3}\d{1,3}$/', $ewww_cloud_ip ) && preg_match( '/http/', $ewww_cloud_transport ) && preg_match( '/great/', $ewww_cloud_status ) ) {
+	//$ewww_cloud_ip = get_transient( 'ewww_image_optimizer_cloud_ip' );
+	//$ewww_cloud_transport = get_transient( 'ewww_image_optimizer_cloud_transport' );
+	if ( false && $cache && preg_match( '/great/', $ewww_cloud_status ) ) {
 		ewwwio_debug_message( 'using cached verification' );
-		global $ewwwio_async_key_verification;
-		$ewwwio_async_key_verification->dispatch();
 		return $ewww_cloud_status;
 	}
-	if ( $ewww_cloud_transport !== 'https' && $ewww_cloud_transport !== 'http' ) {
-		$ewww_cloud_transport = 'https';
-	}
-	if ( preg_match( '/^(\d{1,3}\.){3}\d{1,3}$/', $ewww_cloud_ip ) ) {
-		ewwwio_debug_message( 'using cached ip' );
-		$result = ewww_image_optimizer_cloud_post_key( $ewww_cloud_ip, $ewww_cloud_transport, $api_key );
-		if ( is_wp_error( $result ) ) {
-			$ewww_cloud_transport = 'http';
-			$error_message = $result->get_error_message();
-			ewwwio_debug_message( "verification failed: $error_message" );
-			$result = ewww_image_optimizer_cloud_post_key( $ewww_cloud_ip, $ewww_cloud_transport, $api_key );
-		}
-		if ( is_wp_error( $result ) ) {
-			$error_message = $result->get_error_message();
-			ewwwio_debug_message( "verification failed: $error_message" );
-		} elseif ( ! empty( $result['body'] ) && preg_match( '/(great|exceeded)/', $result['body'] ) ) {
-			$verified = $result['body'];
-			ewwwio_debug_message( "verification success via: $ewww_cloud_transport://$ewww_cloud_ip" );
+	//if ( preg_match( '/^(\d{1,3}\.){3}\d{1,3}$/', $ewww_cloud_ip ) ) {
+		$result = ewww_image_optimizer_cloud_post_key( 'optimize.exactlywww.com', 'https', $api_key );
+		if ( empty( $result->success ) ) { 
+			$result->throw_for_status( false );
+			//$error_message = $result->get_error_message();
+			ewwwio_debug_message( "verification failed" );
+		} elseif ( ! empty( $result->body ) && preg_match( '/(great|exceeded)/', $result->body ) ) {
+			$verified = $result->body;
+			ewwwio_debug_message( "verification success" );
 		} else {
-			ewwwio_debug_message( "verification failed via: $ewww_cloud_ip" );
+			ewwwio_debug_message( "verification failed" );
 			ewwwio_debug_message( print_r( $result, true ) );
 		}
-	}
-	if ( empty( $verified ) ) {
-		$ewww_cloud_transport = 'https';
-		$servers = gethostbynamel( 'optimize.exactlywww.com' );
-		if ( empty ( $servers ) ) {
-			ewwwio_debug_message( 'unable to resolve servers' );
-			return false;
-		}
-		foreach ( $servers as $ip ) {
-			$result = ewww_image_optimizer_cloud_post_key( $ip, $ewww_cloud_transport, $api_key );
-			if ( is_wp_error( $result ) ) {
-				$ewww_cloud_transport = 'http';
-				$error_message = $result->get_error_message();
-				ewwwio_debug_message( "verification failed: $error_message" );
-			} elseif ( ! empty( $result['body'] ) && preg_match( '/(great|exceeded)/', $result['body'] ) ) {
-				$verified = $result['body'];
-				$ewww_cloud_ip = $ip;
-				ewwwio_debug_message( "verification success via: $ewww_cloud_transport://$ewww_cloud_ip" );
-				break;
-			} else {
-				ewwwio_debug_message( "verification failed via: $ip" );
-				ewwwio_debug_message( print_r( $result, true ) );
-			}
-		}
-	}
+	//}
 	if ( empty( $verified ) ) {
 		ewwwio_memory( __FUNCTION__ );
 		return FALSE;
 	} else {
 		set_transient( 'ewww_image_optimizer_cloud_status', $verified, 3600 ); 
-		set_transient( 'ewww_image_optimizer_cloud_ip', $ewww_cloud_ip, 3600 );
-		set_transient( 'ewww_image_optimizer_cloud_transport', $ewww_cloud_transport, 3600 ); 
 		if ( ewww_image_optimizer_get_option( 'ewww_image_optimizer_jpg_level' ) < 20 && ewww_image_optimizer_get_option( 'ewww_image_optimizer_png_level' ) < 20 && ewww_image_optimizer_get_option( 'ewww_image_optimizer_gif_level' ) < 20 && ewww_image_optimizer_get_option( 'ewww_image_optimizer_pdf_level' ) == 0 ) {
 			ewww_image_optimizer_cloud_enable();
 		}
-		ewwwio_debug_message( "verification body contents: {$result['body']}" );
+		ewwwio_debug_message( "verification body contents: " . $result->body );
 		ewwwio_memory( __FUNCTION__ );
 		return $verified;
 	}
 }
 
 function ewww_image_optimizer_cloud_post_key( $ip, $transport, $key ) {
-	$result = wp_remote_post( "$transport://$ip/verify/", array(
-		'timeout' => 5,
-		'sslverify' => false,
-		'body' => array( 'api_key' => $key )
-	) );
+	$useragent = ewww_image_optimizer_cloud_useragent();
+	$result = Requests::post( "$transport://$ip/verify/", array(), array( 'api_key' => $key ), array( 'timeout' => 5, 'useragent' => $useragent ) );
 	return $result;
 }
 
 // checks the provided api key for quota information
 function ewww_image_optimizer_cloud_quota() {
 	ewwwio_debug_message( '<b>' . __FUNCTION__ . '()</b>' );
-	$ewww_cloud_ip = get_transient( 'ewww_image_optimizer_cloud_ip' );
-	$ewww_cloud_transport = get_transient( 'ewww_image_optimizer_cloud_transport' );
 	$api_key = ewww_image_optimizer_get_option( 'ewww_image_optimizer_cloud_key' );
-	$url = "$ewww_cloud_transport://$ewww_cloud_ip/quota/";
-	$result = wp_remote_post( $url, array(
+	$url = "https://optimize.exactlywww.com/quota/";
+	$useragent = ewww_image_optimizer_cloud_useragent();
+	$result = Requests::post( $url, array(), array( 'api_key' => $api_key ), array( 'timeout' => 5, 'useragent' => $useragent ) );
+	/*$result = wp_remote_post( $url, array(
 		'timeout' => 5,
 		'sslverify' => false,
 		'body' => array( 'api_key' => $api_key )
-	) );
-	if ( is_wp_error( $result ) ) {
-		$error_message = $result->get_error_message();
+	) );*/
+	if ( ! $result->success ) {
+		$result->throw_for_status( false );
 		ewwwio_debug_message( "quota request failed: $error_message" );
 		ewwwio_memory( __FUNCTION__ );
 		return '';
-	} elseif ( ! empty( $result['body'] ) ) {
-		ewwwio_debug_message( "quota data retrieved: {$result['body']}" );
-		$quota = explode(' ', $result['body']);
+	} elseif ( ! empty( $result->body ) ) {
+		ewwwio_debug_message( "quota data retrieved: " . $result->body );
+		$quota = explode( ' ', $result->body );
 		ewwwio_memory( __FUNCTION__ );
 		if ( $quota[0] == 0 && $quota[1] > 0 ) {
 			return esc_html( sprintf( _n( 'optimized %1$d images, usage will reset in %2$d day.', 'optimized %1$d images, usage will reset in %2$d days.', $quota[2], EWWW_IMAGE_OPTIMIZER_DOMAIN ), $quota[1], $quota[2] ) );
@@ -1399,18 +1325,19 @@ function ewww_image_optimizer_cloud_quota() {
 */
 function ewww_image_optimizer_cloud_optimizer( $file, $type, $convert = false, $newfile = null, $newtype = null, $fullsize = false, $jpg_params = array( 'r' => '255', 'g' => '255', 'b' => '255', 'quality' => null ) ) {
 	ewwwio_debug_message( '<b>' . __FUNCTION__ . '()</b>' );
-	$ewww_cloud_ip = get_transient( 'ewww_image_optimizer_cloud_ip' );
-	$ewww_cloud_transport = get_transient( 'ewww_image_optimizer_cloud_transport' );
+//	$ewww_cloud_ip = get_transient( 'ewww_image_optimizer_cloud_ip' );
+//	$ewww_cloud_transport = get_transient( 'ewww_image_optimizer_cloud_transport' );
 	$ewww_status = get_transient( 'ewww_image_optimizer_cloud_status' );
 	$started = microtime( true );
-	if ( empty( $ewww_cloud_ip ) || empty( $ewww_cloud_transport ) || preg_match( '/exceeded/', $ewww_status ) ) {
+	if ( preg_match( '/exceeded/', $ewww_status ) ) {
 		if ( ! ewww_image_optimizer_cloud_verify() ) { 
 			return array( $file, false, 'key verification failed', 0 );
-		} else {
+/*		} else {
 			$ewww_cloud_ip = get_transient( 'ewww_image_optimizer_cloud_ip' );
-			$ewww_cloud_transport = get_transient( 'ewww_image_optimizer_cloud_transport' );
+			$ewww_cloud_transport = get_transient( 'ewww_image_optimizer_cloud_transport' );*/
 		}
 	}
+	EWWWIO_CLI::line( ewww_image_optimizer_cloud_quota() );
 	// calculate how much time has elapsed since we started
 	$elapsed = microtime( true ) - $started;
 	// output how much time has elapsed since we started
@@ -1470,14 +1397,15 @@ function ewww_image_optimizer_cloud_optimizer( $file, $type, $convert = false, $
 	ewwwio_debug_message( "webp: $webp" );
 	ewwwio_debug_message( "jpg_params: " . print_r($jpg_params, true) );
 	$api_key = ewww_image_optimizer_get_option('ewww_image_optimizer_cloud_key');
-	$url = "$ewww_cloud_transport://$ewww_cloud_ip/";
-	$boundary = wp_generate_password(24, false);
+	$url = "https://optimize.exactlywww.com/";
+	$boundary = generate_password( 24 );
 
+	$useragent = ewww_image_optimizer_cloud_useragent();
 	$headers = array(
         	'content-type' => 'multipart/form-data; boundary=' . $boundary,
-		'timeout' => 90,
-		'httpversion' => '1.0',
-		'blocking' => true
+//		'timeout' => 90,
+//		'httpversion' => '1.0',
+//		'blocking' => true
 		);
 	$post_fields = array(
 		'oldform' => 1, 
@@ -1518,26 +1446,35 @@ function ewww_image_optimizer_cloud_optimizer( $file, $type, $convert = false, $
 
 	// retrieve the time when the optimizer starts
 //	$started = microtime(true);
-	$response = wp_remote_post( $url, array(
+	$response = Requests::post(
+		$url,
+		$headers,
+		$payload,
+		array(
+			'timeout' => 90,
+			'useragent' => $useragent,
+		)
+	);
+/*	$response = wp_remote_post( $url, array(
 		'timeout' => 90,
 		'headers' => $headers,
 		'sslverify' => false,
 		'body' => $payload,
-		) );
+		) );*/
 //	$elapsed = microtime(true) - $started;
 //	$ewww_debug .= "processing image via cloud took $elapsed seconds<br>";
-	if ( is_wp_error( $response ) ) {
-		$error_message = $response->get_error_message();
-		ewwwio_debug_message( "optimize failed: $error_message" );
+	if ( ! $response->success ) {
+		$response->throw_for_status( false );
+		ewwwio_debug_message( "optimize failed, see exception" );
 		return array( $file, false, 'cloud optimize failed', 0 );
 	} else {
 		$tempfile = $file . ".tmp";
-		file_put_contents( $tempfile, $response['body'] );
+		file_put_contents( $tempfile, $response->body );
 		$orig_size = filesize( $file );
 		$newsize = $orig_size;
 		$converted = false;
 		$msg = '';
-		if ( preg_match( '/exceeded/', $response['body'] ) ) {
+		if ( preg_match( '/exceeded/', $response->body ) ) {
 			ewwwio_debug_message( 'License Exceeded' );
 			set_transient( 'ewww_image_optimizer_cloud_status', 'exceeded', 3600 );
 			$msg = 'exceeded';
@@ -3191,7 +3128,7 @@ function ewww_image_optimizer_get_option( $option_name ) {
 /*	if ( isset( $ewwwio_settings[ $option_name ] ) ) {
 		return $ewwwio_settings[ $option_name ];
 	}*/
-	$option_value = get_option( $option_name ); // TODO: get it from the db 
+	$option_value = get_option( $option_name );
 //	$ewwwio_settings[ $option_name ] = $option_value;
 	return $option_value;
 }
@@ -3931,8 +3868,8 @@ function ewwwio_debug_message( $message ) {
 	if ( ewww_image_optimizer_get_option( 'ewww_image_optimizer_debug' ) ) {
 		global $ewww_debug;
 		$ewww_debug .= "$message<br>";
+		echo $message . "\n";
 	}
-	echo $message . "\n";
 }
 
 function ewwwio_debug_backtrace() {
@@ -4179,6 +4116,10 @@ function absint( $maybeint ) {
 	return abs( intval( $maybeint ) );
 }
 
+function esc_html( $string ) { // TODO: make this do something
+	return $string;
+}
+
 // WP translation function replacements
 function __( $string ) {
 	return $string;
@@ -4189,6 +4130,14 @@ function _e( $string ) {
 }
 
 function _x( $string ) {
+	return $string;
+}
+function _n( $string1, $string2, $count ) {
+	if ( $count == 1 ) {
+		return $string1;
+	} else {
+		return $string2;
+	}
 }
 
 // stubs
@@ -4223,8 +4172,8 @@ function get_option( $option, $default = false ) {
 		$row = $wpdb->get_row( $wpdb->prepare( "SELECT option_value FROM $wpdb->options WHERE option_name = %s LIMIT 1", $option ) );
 		// Has to be get_row instead of get_var because of funkiness with 0, false, null values
 		if ( is_array( $row ) ) {
-		print_r( $row );
-		echo "\n";
+	//	print_r( $row );
+	//	echo "\n";
 			$value = $row['option_value'];
 	//echo "getting $option from db: $value\n";
 			$alloptions[$option] = $value;
@@ -4249,11 +4198,10 @@ function load_alloptions() {
 		$alloptions = array();
 		foreach ( (array) $alloptions_db as $o ) {
 			$option_name = $o['option_name'];
-			if ( isset( $ewwwio_settings ) && isset( $ewwwio_settings[ $option_name ] ) ) {
-				$alloptions[ $option_name ] = $ewwwio_settings[ $option_name ];
-			} else {
-				$alloptions[ $option_name ] = $o['option_value'];
-			}
+			$alloptions[ $option_name ] = $o['option_value'];
+		}
+		foreach ( $ewwwio_settings as $name => $value ) {
+			$alloptions[ $name ] = $value;
 		}
 	}
 
@@ -4415,5 +4363,15 @@ function set_transient( $transient, $value, $expiration = 0 ) {
 		}
 	}
 	return $result;
+}
+
+//basically just used to generate random strings
+function generate_password( $length = 12 ) {
+	$chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+	$password = '';
+	for ( $i = 0; $i < $length; $i++ ) {
+		$password .= substr( $chars, rand( 0, strlen( $chars ) - 1 ), 1 );
+	}
+	return $password;
 }
 ?>

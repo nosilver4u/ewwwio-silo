@@ -8,8 +8,10 @@ define( 'EWWW_IMAGE_OPTIMIZER_DOMAIN', 'ewww-image-optimizer' );
 define( 'EWWW_IMAGE_OPTIMIZER_PLUGIN_FILE', __FILE__ );
 // this is the path of the plugin file relative to the plugins/ folder
 define( 'EWWW_IMAGE_OPTIMIZER_PLUGIN_FILE_REL', 'ewww-image-optimizer/ewww-image-optimizer.php' );
-// the folder where we install optimization tools
-define( 'EWWW_IMAGE_OPTIMIZER_TOOL_PATH', ABSPATH . 'tools/' );
+if ( ! defined( 'EWWW_IMAGE_OPTIMIZER_TOOL_PATH' ) ) {
+	// the folder where we install optimization tools
+	define( 'EWWW_IMAGE_OPTIMIZER_TOOL_PATH', ABSPATH . 'tools/' );
+}
 // this is the full system path to the plugin folder
 define( 'EWWW_IMAGE_OPTIMIZER_PLUGIN_PATH', ABSPATH );
 // this is the full system path to the bundled binaries

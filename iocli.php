@@ -48,17 +48,21 @@ class EWWWIO_CLI {
 //		ewww_image_optimizer_admin_init();
 		// and what shall we do?
 				//$this->line( 'folder provided: ' . $args['f'] );
-				$this->line( __( 'Scanning, this could take a while', EWWW_IMAGE_OPTIMIZER_DOMAIN ) );
-				$other_attachments = ewww_image_optimizer_scan_other( $args['f'] );
-				if ( empty( $this->force ) &&empty( count( $other_attachments ) ) ) {
-					$this->line( sprintf( __( '%1$d images need optimizing.', EWWW_IMAGE_OPTIMIZER_DOMAIN ), count($other_attachments) ) );
-					$this->success( __('Finished Optimization!', EWWW_IMAGE_OPTIMIZER_DOMAIN) );
-					return;
-				}
-				if ( ! isset( $args['noprompt'] ) ) {
-					$this->confirm( sprintf( __( '%1$d images need optimizing.', EWWW_IMAGE_OPTIMIZER_DOMAIN ), count($other_attachments) ) );
-				}
-				ewww_image_optimizer_bulk_other( $other_attachments );
+		$this->line( __( 'Scanning, this could take a while', EWWW_IMAGE_OPTIMIZER_DOMAIN ) );
+		if ( ! empty( $args['f'] ) ) {
+			$other_attachments = ewww_image_optimizer_scan_other( $args['f'] );
+		} else {
+			$other_attachments = ewww_image_optimizer_scan_other();
+		}
+		if ( empty( $this->force ) && empty( count( $other_attachments ) ) ) {
+			$this->line( sprintf( __( '%1$d images need optimizing.', EWWW_IMAGE_OPTIMIZER_DOMAIN ), count($other_attachments) ) );
+			$this->success( __('Finished Optimization!', EWWW_IMAGE_OPTIMIZER_DOMAIN) );
+			return;
+		}
+		if ( ! isset( $args['noprompt'] ) ) {
+			$this->confirm( sprintf( __( '%1$d images need optimizing.', EWWW_IMAGE_OPTIMIZER_DOMAIN ), count($other_attachments) ) );
+		}
+		ewww_image_optimizer_bulk_other( $other_attachments );
 	}
 
 	function single( $args ) {
@@ -68,7 +72,6 @@ class EWWWIO_CLI {
 		}
 		if ( empty( $args['f'] ) ) {
 			$this->error( __('Must specify a file with -f', EWWW_IMAGE_OPTIMIZER_DOMAIN) );
-			exit;
 		}
 		$attachment = trim( $args['f'] );
 		// retrieve the time when the optimizer starts
@@ -97,18 +100,38 @@ class EWWWIO_CLI {
 		return $user_args;
 	}
 	function success( $message ) {
+		if ( ! defined( 'EWWW_CLI' ) || ! EWWW_CLI ) {
+			return;
+		}
 		global $colors;
 		echo $colors->getColoredString( $message, 'green' ) . "\n";
 	}
+	function warning( $message ) {
+		if ( ! defined( 'EWWW_CLI' ) || ! EWWW_CLI ) {
+			return;
+		}
+		global $colors;
+		echo $colors->getColoredString( $message, 'red' ) . "\n";
+	}
 	function error( $message ) {
+		if ( ! defined( 'EWWW_CLI' ) || ! EWWW_CLI ) {
+			return;
+		}
 		global $colors;
 		echo $colors->getColoredString( $message, 'red' ) . "\n";
 		error_log( $message );
+		exit;
 	}
 	function line( $message ) {
+		if ( ! defined( 'EWWW_CLI' ) || ! EWWW_CLI ) {
+			return;
+		}
 		echo $message . "\n";
 	}
 	function confirm( $question ) {
+		if ( ! defined( 'EWWW_CLI' ) || ! EWWW_CLI ) {
+			return;
+		}
 		echo $question . " [y/n] ";
 		$answer = strtolower( trim( fgets( STDIN ) ) );
 		if ( 'y' != $answer )
@@ -117,10 +140,9 @@ class EWWWIO_CLI {
 }
 global $ewwwio_cli;
 $ewwwio_cli = new EWWWIO_CLI();
-//EWWWIO_CLI::add_command( 'ewwwio', 'EWWWIO_CLI' );
 
 // displays the 'Optimize Everything Else' section of the Bulk Optimize page
-function ewww_image_optimizer_scan_other ( $folder ) {
+function ewww_image_optimizer_scan_other( $folder = null ) {
 	global $wpdb;
 //	$aux_resume = get_option('ewww_image_optimizer_aux_resume');
 	// initialize the $attachments variable for auxiliary images
@@ -128,7 +150,7 @@ function ewww_image_optimizer_scan_other ( $folder ) {
 	// check the 'bulk resume' option
 //	$resume = get_option('ewww_image_optimizer_aux_resume');
         // check if there is a previous bulk operation to resume
-	if ( is_dir( $folder ) ) {
+	if ( $folder && is_dir( $folder ) ) {
 		$attachments = ewww_image_optimizer_image_scan( $folder );
 		// store the filenames we retrieved in the 'bulk_attachments' option so we can keep track of our progress in the database
 		update_option('ewww_image_optimizer_bulk_attachments', $attachments, 'no');
