@@ -1,4 +1,6 @@
 <?php
+echo "Hold on bucko, we're not ready yet!";
+die;
 if ( ! defined( 'ABSPATH' ) ) {
 	define( 'ABSPATH', trailingslashit( dirname( __file__ ) );
 }

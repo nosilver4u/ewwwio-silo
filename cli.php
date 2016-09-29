@@ -13,11 +13,11 @@ if ( file_exists( ABSPATH . 'config.php' ) ) {
 	include_once( ABSPATH . 'config.php' );
 }
 require( ABSPATH . 'common.php' );
-require( ABSPATH . 'ewww-image-optimizer.php' );
 require( ABSPATH . 'wp-db.php' );
-require( ABSPATH . 'silo.php' );
 require( ABSPATH . 'iocli.php' );
+require( ABSPATH . 'ewww-image-optimizer.php' );
 require( ABSPATH . 'classes/Requests/library/Requests.php' );
+require( ABSPATH . 'silo.php' );
 Requests::register_autoloader();
 
 $args = $ewwwio_cli->parse_args();
