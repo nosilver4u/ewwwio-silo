@@ -80,10 +80,10 @@ $ewwwio_settings = array(
 	//'ewww_image_optimizer_delete_originals'		=>	false,
 
 	// Removes metadata and increases cpu usage dramatically. PNG is generally much better than JPG for logos and other images with a limited range of colors. Checking this option will slow down JPG processing significantly, and you may want to enable it only temporarily.
-	//'ewww_image_optimizer_jpg_to_png',		=>	false,
+	//'ewww_image_optimizer_jpg_to_png'		=>	false,
 
 	// This is not a lossless conversion. JPG is generally much better than PNG for photographic use because it compresses the image and discards data. PNGs with transparency are not converted by default.
-	//'ewww_image_optimizer_png_to_jpg',		=>	false,
+	//'ewww_image_optimizer_png_to_jpg'		=>	false,
 
 	// Set a background color in hexadecimal notation (without the #) to be used when converting PNGs with transparency (which does not happen if the background color is NOT set)
 //	//'ewww_image_optimizer_jpg_background'		=>	'ffffff',
@@ -92,10 +92,10 @@ $ewwwio_settings = array(
 	//'ewww_image_optimizer_jpg_quality'		=>	82,
 
 	// PNG is generally better than GIF, but animated images will not be converted.
-	//'ewww_image_optimizer_gif_to_png',		=>	false,
+	//'ewww_image_optimizer_gif_to_png'		=>	false,
 
 	// JPG to WebP conversion is lossy, but quality loss is minimal. PNG to WebP conversion is lossless. This setting enables conversion for both formats. Originals are never deleted, and WebP images should only be served to supported browsers.
-	//'ewww_image_optimizer_webp',			=>	false
+	//'ewww_image_optimizer_webp'			=>	false,
 
 
 	// not sure - don't bother setting these, they are not used currently

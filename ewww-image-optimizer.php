@@ -786,6 +786,11 @@ function ewww_image_optimizer_md5check( $path ) {
 		'276a0221a4c978825903572c2b68b3010399375d6b9dc7429286caf625cae95a', // cwebp-mac9 0.5.0, EWWW 2.6.0
 		'be3e81ec7267e7878ddd4ee01df1553966952f74bbfd30a5523d12d53f019ecb', // cwebp-sol 0.5.0, EWWW 2.6.0
 		'b41123ec06f21765f50ec1b017839f99ab4f28497d87da722817a6023e4a3b32', // cwebp.exe 0.5.0, EWWW 2.6.0
+		'f0547a6219c5c05d0af29c5e411e054b9d795567f4ae2e27893815af9383c60f', // cwebp-fbsd 0.5.1, EWWW 2.9.9
+		'9eaf670bb2d567421c7e2918112dc00406c60f008b120f648cf0bdba73ee9b6b', // cwebp-linux 0.5.1, EWWW 2.9.9
+		'1202ea932b315913d3736460dd3d50bc5b251b7a0a8f0468c63144ba427679c2', // cwebp-mac9 0.5.1, EWWW 2.9.9
+		'27ba0abce52e74744f6235fcde9b153b5052b9c15cd78e74feffaea9dafcc178', // cwebp-sol 0.5.1, EWWW 2.9.9
+		'b02864989f0a1a263caa796c5b8caf18c1f774ed0ba08a9350e8820459875f51', // cwebp.exe 0.5.1, EWWW 2.9.9
 	);
 	foreach ( $valid_sums as $checksum ) {
 		if ( $checksum === $binary_sum ) {
