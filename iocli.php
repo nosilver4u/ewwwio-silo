@@ -181,7 +181,8 @@ function ewww_image_optimizer_bulk_other( $attachments ) {
 	// update the 'aux resume' option to show that an operation is in progress
 	update_option('ewww_image_optimizer_bulk_resume', 'true');
 	// store the time and number of images for later display
-//	$count = count( $attachments );
+	$count = count( $attachments );
+	$current = 0;
 //	update_option('ewww_image_optimizer_bulk_last', array(time(), $count));
 	foreach ( $attachments as $attachment ) {
 		sleep( $ewwwio_cli->delay );
@@ -197,8 +198,9 @@ function ewww_image_optimizer_bulk_other( $attachments ) {
 		}
 		// store the updated list of attachment IDs back in the 'bulk_attachments' option
 		update_option( 'ewww_image_optimizer_bulk_attachments', $attachments_left );
+		$current++;
 		// output the path
-		EWWWIO_CLI::line( __('Optimized image:', EWWW_IMAGE_OPTIMIZER_DOMAIN) . ' ' . $attachment );
+		EWWWIO_CLI::line( "($current/$count) " . __('Optimized image:', EWWW_IMAGE_OPTIMIZER_DOMAIN) . ' ' . $attachment );
 		// tell the user what the results were for the original image
 		EWWWIO_CLI::line( html_entity_decode( $results[1] ) );
 		// calculate how much time has elapsed since we started

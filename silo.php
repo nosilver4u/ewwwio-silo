@@ -55,7 +55,10 @@ if ( defined( 'PHP_VERSION_ID' ) ) {
 	ewwwio_debug_message( 'PHP version: ' . PHP_VERSION_ID );
 }
 
+ewww_image_optimizer_cloud_verify();
 ewww_image_optimizer_admin_init();
+if ( ! class_exists( 'SQLite3' ) )
+	ewww_image_optimizer_cloud_verify(); //run it again to override defaults if necessary
 
 // Hooks
 // TODO: add alternative post indicator on settings to install pngout

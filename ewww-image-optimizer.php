@@ -66,10 +66,10 @@ function ewww_image_optimizer_tool_init() {
 // set some default option values
 function ewww_image_optimizer_set_defaults() {
 	ewwwio_debug_message( '<b>' . __FUNCTION__ . '()</b>' );
-	add_option( 'ewww_image_optimizer_disable_pngout', TRUE );
+	add_option( 'ewww_image_optimizer_disable_pngout', true );
 	add_option( 'ewww_image_optimizer_optipng_level', 2 );
 	add_option( 'ewww_image_optimizer_pngout_level', 2 );
-	add_option( 'ewww_image_optimizer_remove_meta', TRUE );
+	add_option( 'ewww_image_optimizer_remove_meta', true );
 	add_option( 'ewww_image_optimizer_jpg_level', '10' );
 	add_option( 'ewww_image_optimizer_png_level', '10' );
 	add_option( 'ewww_image_optimizer_gif_level', '10' );
@@ -541,7 +541,7 @@ function ewww_image_optimizer_safemode_check() {
 }
 
 // If the utitilites are in the content folder, we use that. Otherwise, we check system paths. We also do a basic check to make sure we weren't given a malicious path.
-function ewww_image_optimizer_path_check ( $j = true, $o = true, $g = true, $p = true, $q = true, $w = true) {
+function ewww_image_optimizer_path_check( $j = true, $o = true, $g = true, $p = true, $q = true, $w = true) {
 	ewwwio_debug_message( '<b>' . __FUNCTION__ . '()</b>' );
 	$jpegtran = false;
 	$optipng = false;
@@ -1030,11 +1030,11 @@ function ewww_image_optimizer_tool_found( $path, $tool ) {
 			break;
 		case 'n': // nice
 			exec("$path 2>&1", $nice_output);
-			if (isset($nice_output)) ewwwio_debug_message( "$path: {$nice_output[0]}" );
-			if (isset($nice_output) && preg_match('/usage/', $nice_output[0])) {
+			if ( is_array( $nice_output ) && isset( $nice_output ) ) ewwwio_debug_message( "$path: {$nice_output[0]}" );
+			if ( is_array( $nice_output ) && isset( $nice_output ) && preg_match( '/usage/', $nice_output[0] ) ) {
 				ewwwio_debug_message( 'nice found' );
 				return TRUE;
-			} elseif (isset($nice_output) && preg_match('/^\d+$/', $nice_output[0])) {
+			} elseif ( is_array( $nice_output ) && isset( $nice_output ) && preg_match( '/^\d+$/', $nice_output[0] ) ) {
 				ewwwio_debug_message( 'nice found' );
 				return TRUE;
 			}
@@ -1239,8 +1239,6 @@ function ewww_image_optimizer( $file, $gallery_type = 4, $converted = false, $ne
 		return array(false, $msg, $converted, $original);
 	}
 	if ( ! EWWW_IMAGE_OPTIMIZER_CLOUD ) {
-		// check to see if 'nice' exists
-		$nice = ewww_image_optimizer_find_nix_binary( 'nice', 'n' );
 		if ( ! defined( 'EWWW_IMAGE_OPTIMIZER_NOEXEC' ) ) {
 			// Check if exec is disabled
 			if( ewww_image_optimizer_exec_check() ) {
@@ -1255,6 +1253,12 @@ function ewww_image_optimizer( $file, $gallery_type = 4, $converted = false, $ne
 			} else {
 				define( 'EWWW_IMAGE_OPTIMIZER_NOEXEC', false );
 			}
+		}
+		if ( EWWW_IMAGE_OPTIMIZER_NOEXEC ) {
+			$nice = '';
+		} else {
+			// check to see if 'nice' exists
+			$nice = ewww_image_optimizer_find_nix_binary( 'nice', 'n' );
 		}
 	}
 	$skip = ewww_image_optimizer_skip_tools();

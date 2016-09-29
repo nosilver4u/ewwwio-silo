@@ -1203,6 +1203,11 @@ function ewww_image_optimizer_full_cloud() {
 // turns on the cloud settings when they are all disabled
 function ewww_image_optimizer_cloud_enable() {
 	ewwwio_debug_message( '<b>' . __FUNCTION__ . '()</b>' );
+	add_option( 'ewww_image_optimizer_jpg_level', '20' );
+	add_option( 'ewww_image_optimizer_png_level', '20' );
+	add_option( 'ewww_image_optimizer_gif_level', '10' );
+	add_option( 'ewww_image_optimizer_pdf_level', '10' );
+	// just to make sure they get set with & without a database
 	ewww_image_optimizer_set_option('ewww_image_optimizer_jpg_level', 20);
 	ewww_image_optimizer_set_option('ewww_image_optimizer_png_level', 20);
 	ewww_image_optimizer_set_option('ewww_image_optimizer_gif_level', 10);
@@ -1236,17 +1241,13 @@ function ewww_image_optimizer_cloud_verify( $cache = true, $api_key = '' ) {
 		return false;
 	}
 	$ewww_cloud_status = get_transient( 'ewww_image_optimizer_cloud_status' );
-	//$ewww_cloud_ip = get_transient( 'ewww_image_optimizer_cloud_ip' );
-	//$ewww_cloud_transport = get_transient( 'ewww_image_optimizer_cloud_transport' );
 	if ( false && $cache && preg_match( '/great/', $ewww_cloud_status ) ) {
 		ewwwio_debug_message( 'using cached verification' );
 		return $ewww_cloud_status;
 	}
-	//if ( preg_match( '/^(\d{1,3}\.){3}\d{1,3}$/', $ewww_cloud_ip ) ) {
 		$result = ewww_image_optimizer_cloud_post_key( 'optimize.exactlywww.com', 'https', $api_key );
 		if ( empty( $result->success ) ) { 
 			$result->throw_for_status( false );
-			//$error_message = $result->get_error_message();
 			ewwwio_debug_message( "verification failed" );
 		} elseif ( ! empty( $result->body ) && preg_match( '/(great|exceeded)/', $result->body ) ) {
 			$verified = $result->body;
@@ -1255,7 +1256,6 @@ function ewww_image_optimizer_cloud_verify( $cache = true, $api_key = '' ) {
 			ewwwio_debug_message( "verification failed" );
 			ewwwio_debug_message( print_r( $result, true ) );
 		}
-	//}
 	if ( empty( $verified ) ) {
 		ewwwio_memory( __FUNCTION__ );
 		return FALSE;
@@ -1408,7 +1408,7 @@ function ewww_image_optimizer_cloud_optimizer( $file, $type, $convert = false, $
 //		'blocking' => true
 		);
 	$post_fields = array(
-		'oldform' => 1, 
+		'filename' => $file,
 		'convert' => $convert, 
 		'metadata' => $metadata, 
 		'api_key' => $api_key,
@@ -4172,7 +4172,8 @@ function get_option( $option, $default = false ) {
 	}
 	if ( isset( $alloptions[$option] ) ) {
 		$value = maybe_unserialize( $alloptions[$option] );
-	//echo "getting $option: $value\n";
+		//if ( $option != 'ewww_image_optimizer_debug' )
+		//	echo "getting autoloaded: $option: $value\n";
 	} else {
 		$row = $wpdb->get_row( $wpdb->prepare( "SELECT option_value FROM $wpdb->options WHERE option_name = %s LIMIT 1", $option ) );
 		// Has to be get_row instead of get_var because of funkiness with 0, false, null values
@@ -4180,7 +4181,8 @@ function get_option( $option, $default = false ) {
 	//	print_r( $row );
 	//	echo "\n";
 			$value = $row['option_value'];
-	//echo "getting $option from db: $value\n";
+			//if ( $option != 'ewww_image_optimizer_debug' )
+			//	echo "getting $option from db: $value\n";
 			$alloptions[$option] = $value;
 		} else { // option does not exist, so we must cache its non-existence
 			return $default;
@@ -4206,6 +4208,7 @@ function load_alloptions() {
 			$alloptions[ $option_name ] = $o['option_value'];
 		}
 		foreach ( $ewwwio_settings as $name => $value ) {
+			//echo "setting $name to $value\n";
 			$alloptions[ $name ] = $value;
 		}
 	}
@@ -4237,7 +4240,7 @@ function update_option( $option, $value, $autoload = null ) {
 	}
 
 	$result = $wpdb->update( $wpdb->options, $update_args, array( 'option_name' => $option ) );
-	if ( ! $result )
+	if ( ! $result && $wpdb->ready )
 		return false;
 	global $alloptions;
 	if ( isset( $alloptions[$option] ) ) {
@@ -4258,7 +4261,7 @@ function add_option( $option, $value = '', $deprecated = '', $autoload = 'yes' )
 	$autoload = ( 'no' === $autoload || false === $autoload ) ? 'no' : 'yes';
 
 	$result = $wpdb->query( $wpdb->prepare( "INSERT OR IGNORE INTO `$wpdb->options` (`option_name`, `option_value`, `autoload`) VALUES (%s, %s, %s)", $option, $serialized_value, $autoload ) );
-	if ( ! $result )
+	if ( ! $result && $wpdb->ready )
 		return false;
 
 	if ( 'yes' == $autoload ) {
