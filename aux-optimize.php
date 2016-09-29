@@ -181,9 +181,11 @@ function ewww_image_optimizer_image_scan( $dir ) {
 	$query = "SELECT path,image_size FROM $wpdb->ewwwio_images";
 	$already_optimized = $wpdb->get_results( $query, ARRAY_A );
 	$optimized_list = array();
-	foreach( $already_optimized as $optimized ) {
-		$optimized_path = $optimized['path'];
-		$optimized_list[ $optimized_path ] = $optimized['image_size'];
+	if ( ewww_image_optimizer_iterable( $already_optimized ) ) {
+		foreach( $already_optimized as $optimized ) {
+			$optimized_path = $optimized['path'];
+			$optimized_list[ $optimized_path ] = $optimized['image_size'];
+		}
 	}
 	$file_counter = 0;
 	if ( ewww_image_optimizer_stl_check() ) {

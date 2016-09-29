@@ -2844,6 +2844,11 @@ function ewww_image_optimizer_quick_mimetype( $path ) {
 	}
 }
 
+// make sure an array/object can be parsed by a foreach()
+function ewww_image_optimizer_iterable( $var ) {
+	return ! empty( $var ) && ( is_array( $var ) || is_object( $var ) );
+}
+
 /**
  * Print column header for optimizer results in the media library using
  * the `manage_media_columns` hook.

@@ -29,6 +29,9 @@ class EWWWIO_CLI {
 	}
 
 	function optimize( $args ) {
+		if ( ! class_exists( 'SQLite3' ) ) {
+			$this->warning( __( 'The SQLite3 extension is missing, so we will not be able to keep track of what images have been optimized!', EWWW_IMAGE_OPTIMIZER_DOMAIN ) );
+		}
 		if ( empty( $args['delay'] ) ) {
 			$this->delay = ewww_image_optimizer_get_option( 'ewww_image_optimizer_delay' );
 		} else {
@@ -66,6 +69,9 @@ class EWWWIO_CLI {
 	}
 
 	function single( $args ) {
+		if ( ! class_exists( 'SQLite3' ) ) {
+			$this->warning( __( 'The SQLite3 extension is missing, so we will not be able to keep track of what images have been optimized!', EWWW_IMAGE_OPTIMIZER_DOMAIN ) );
+		}
 		if ( isset( $args['force'] ) ) {
 			$this->line( __('Forcing re-optimization of previously processed images.', EWWW_IMAGE_OPTIMIZER_DOMAIN ) );
 			$this->force = true;

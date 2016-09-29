@@ -394,9 +394,14 @@ class wpdb {
 		 *  - ext/mysql is not loaded.
 		 */
 		if ( ! class_exists( 'SQLite3' ) ) {
-			// TODO: throw a big fat warning
+	//		define( 'EWWW_IMAGE_OPTIMIZER_DB', false );
+			$this->dbname = false;
+			$this->ready = false;
+			$this->dbh = false;
+			return;
 		}
 
+	//	define( 'EWWW_IMAGE_OPTIMIZER_DB', true );
 		$this->dbname = $dbname;
 
 		$this->db_connect();
@@ -761,13 +766,6 @@ class wpdb {
 			return $this->dbh->escapeString( $string );
 		}
 
-		$class = get_class( $this );
-		if ( function_exists( '__' ) ) {
-			/* translators: %s: database access abstraction class, usually wpdb or a class extending wpdb */
-			_doing_it_wrong( $class, sprintf( __( '%s must set a database connection for use with escaping.' ), $class ), '3.6.0' );
-		} else {
-			_doing_it_wrong( $class, sprintf( '%s must set a database connection for use with escaping.', $class ), '3.6.0' );
-		}
 		return addslashes( $string );
 	}
 
@@ -1624,11 +1622,11 @@ class wpdb {
 		if ( $query ) {
 			$this->query( $query );
 		} else {
-			return null;
+			return null; //array();
 		}
 
 		if ( !isset( $this->last_result[$y] ) )
-			return null;
+			return null; //array();
 
 /*		if ( $output == OBJECT ) {
 			return $this->last_result[$y] ? $this->last_result[$y] : null;
@@ -1696,7 +1694,7 @@ class wpdb {
 		if ( $query ) {
 			$this->query( $query );
 		} else {
-			return null;
+			return null;//array();
 		}
 
 		$new_array = array();
@@ -1712,7 +1710,7 @@ class wpdb {
 			}
 			return $new_array;
 		}
-		return null;
+		return null;//array();
 	}
 
 	/**
