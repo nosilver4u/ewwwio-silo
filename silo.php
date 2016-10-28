@@ -1,6 +1,5 @@
 <?php
 // TODO: cleanup massively
-// TODO: if SQLite3 class does not exist, alert the user, and then proceed without tracking, and load defaults from config.php (if exists)
 define( 'EWWW_IMAGE_OPTIMIZER_VERSION', '10.0' );
 // Constants
 define( 'EWWW_IMAGE_OPTIMIZER_DOMAIN', 'ewww-image-optimizer' );
@@ -23,15 +22,23 @@ define( 'EWWW_IMAGE_OPTIMIZER_IMAGES_PATH', ABSPATH . 'images/' );
 $ewww_debug = '';
 $ewww_defer = true;
 
-if ( ! file_exists( ABSPATH . 'ewwwio.db' ) ) {
-	ewww_image_optimizer_install_table();
+// Create SQLite3 table
+if ( ! file_exists( ABSPATH . 'ewwwio.db' ) && ! defined( 'DB_NAME' ) ) {
+	ewww_image_optimizer_install_sqlite_table();
 }
 
 // setup custom $wpdb attribute for our database
 global $wpdb;
 
-if ( ! isset( $wpdb ) ) {
+if ( ! isset( $wpdb ) && ! defined( 'DB_NAME' ) ) {
 	$wpdb = new wpdb( ABSPATH . 'ewwwio.db' );
+} elseif ( ! isset( $wpdb ) && defined( 'DB_NAME' ) && DB_NAME ) {
+	$wpdb = new wpdb( DB_USER, DB_PASSWORD, DB_NAME, DB_HOST );
+}
+
+// Create MySQL tables
+if ( defined( 'DB_NAME' ) && DB_NAME ) {
+	ewww_image_optimizer_install_mysql_table();
 }
 
 if ( ! isset( $wpdb->ewwwio_images ) ) {
@@ -57,7 +64,7 @@ if ( defined( 'PHP_VERSION_ID' ) ) {
 
 ewww_image_optimizer_cloud_verify();
 ewww_image_optimizer_admin_init();
-if ( ! class_exists( 'SQLite3' ) )
+if ( ! class_exists( 'SQLite3' ) && ! defined( 'DB_NAME' ) )
 	ewww_image_optimizer_cloud_verify(); //run it again to override defaults if necessary
 
 // Hooks

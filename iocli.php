@@ -3,7 +3,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 /**
- * implements wp-cli extension for bulk optimizing
+ * implements cli extension for bulk optimizing
  */
 class EWWWIO_CLI {
 
@@ -29,7 +29,7 @@ class EWWWIO_CLI {
 	}
 
 	function optimize( $args ) {
-		if ( ! class_exists( 'SQLite3' ) ) {
+		if ( ! class_exists( 'SQLite3' ) && ! defined( 'DB_NAME' ) ) {
 			$this->warning( __( 'The SQLite3 extension is missing, so we will not be able to keep track of what images have been optimized!', EWWW_IMAGE_OPTIMIZER_DOMAIN ) );
 		}
 		if ( empty( $args['delay'] ) ) {
@@ -69,7 +69,7 @@ class EWWWIO_CLI {
 	}
 
 	function single( $args ) {
-		if ( ! class_exists( 'SQLite3' ) ) {
+		if ( ! class_exists( 'SQLite3' ) && ! defined( 'DB_NAME' ) ) {
 			$this->warning( __( 'The SQLite3 extension is missing, so we will not be able to keep track of what images have been optimized!', EWWW_IMAGE_OPTIMIZER_DOMAIN ) );
 		}
 		if ( isset( $args['force'] ) ) {

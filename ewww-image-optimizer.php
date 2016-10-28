@@ -4,9 +4,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-//require_once( EWWW_IMAGE_OPTIMIZER_PLUGIN_PATH . 'common.php' );
-//require_once( EWWW_IMAGE_OPTIMIZER_PLUGIN_PATH . 'background.php' );
-
 // check to see if the cloud constant is defined (which would mean we've already run init) and then set it properly if not
 function ewww_image_optimizer_cloud_init() {
 	ewwwio_debug_message( '<b>' . __FUNCTION__ . '()</b>' );

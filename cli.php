@@ -17,7 +17,11 @@ require( ABSPATH . 'classes/Requests/library/Requests.php' );
 Requests::register_autoloader();
 
 require( ABSPATH . 'common.php' );
-require( ABSPATH . 'wp-db.php' );
+if ( defined( 'DB_NAME' ) && DB_NAME ) {
+	require( ABSPATH . 'mysql-db.php' );
+} else {
+	require( ABSPATH . 'sqlite3-db.php' );
+}
 require( ABSPATH . 'iocli.php' );
 require( ABSPATH . 'ewww-image-optimizer.php' );
 require( ABSPATH . 'silo.php' );

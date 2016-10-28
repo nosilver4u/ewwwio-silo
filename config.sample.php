@@ -114,4 +114,24 @@ $ewwwio_settings = array(
 	//'ewww_image_optimizer_webp_for_cdn', 'boolval' );
 );
 
+// By default, SILO uses sqlite for tracking image status. This may not be suitable in cases where overlapping processes need write access to the database. Uncomment (remove the leading slashes) and configure the settings below to enable MySQL support.
+// You will need to manually create an empty database, but SILO will create all the tables when it is first run.
+/** MySQL database name */
+//define('DB_NAME', 'ewww_silo');
+
+/** MySQL database username */
+//define('DB_USER', '');
+
+/** MySQL database password */
+//define('DB_PASSWORD', '');
+
+/** MySQL hostname */
+//define('DB_HOST', 'localhost');
+
+/** Database Charset to use in creating database tables. */
+//define('DB_CHARSET', 'utf8');
+
+/** The Database Collate type. Don't change this if in doubt. */
+//define('DB_COLLATE', '');
+
 ?>

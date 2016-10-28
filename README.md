@@ -3,7 +3,7 @@
 
 License: GPLv3
 
-This is a port of the EWWW Image Optimizer plugin for WordPress that reduces image sizes in standalone (SILO) mode using lossless/lossy methods and image format conversion. It is currently in Alpha status, and contains copious amount of the WP code still. Some of that is intential, like the port of the wpdb class to interface with SQLite3, but some just needs cleaning.
+This is a port of the EWWW Image Optimizer plugin for WordPress that reduces image sizes in standalone (SILO) mode using lossless/lossy methods and image format conversion. It is currently in Alpha status, and contains copious amount of the WP code still. Some of that is intential, like the port of the wpdb class to interface with SQLite3/MySQL, but some just needs cleaning.
 SILO edition is a PHP application that will optimize your images from the command-line (and soon with a web-interface). It can re-compress your images, will eventually be able to convert your images automatically to the file format that will produce the smallest image size, and can currently apply lossy compression to achieve huge savings for PNG and JPG images.
 
 ###Why use EWWW Image Optimizer?
@@ -28,7 +28,7 @@ Scans entire folders (recursively) to optimize every image, with minimal hassle.
 
 ###Skips Previously Optimized Images
 
-All optimized images are stored in an (optional) SQLite3 database so that the plugin does not attempt to re-optimize them unless they are modified.
+All optimized images are stored in an (optional) SQLite3 or MySQL database so that the plugin does not attempt to re-optimize them unless they are modified.
 
 ###WebP Images
 
@@ -44,7 +44,7 @@ Planning to add the ability to upload to Amazon S3, Azure Storage, Cloudinary, a
 
 ## Pre-requisites
 
-Make sure you have php-cli, and php-sqlite3 available. The SQLite3 extension is optional, but will allow EWWW IO to keep track of which images have been compressed already, if you intend to run it regularly. There is a sample config file at config.sample.php which you can copy to config.php and customize to your liking. If the SQLite3 extension is available, options may also be stored in the database, otherwise, they will be read from the config file, or use the defaults.
+Make sure you have php-cli, and php-sqlite3 available. The SQLite3 or Mysqli extensions are optional, but will allow EWWW IO to keep track of which images have been compressed already, if you intend to run it regularly. There is a sample config file at config.sample.php which you can copy to config.php and customize to your liking. If the SQLite3 or Mysqli extensions are available, options may also be stored in the database, otherwise, they will be read from the config file, or use the defaults.
 
 ###Installing pngout
 

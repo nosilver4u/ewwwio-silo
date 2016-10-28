@@ -1228,7 +1228,7 @@ function ewww_image_optimizer_cloud_verify( $cache = true, $api_key = '' ) {
 		$api_key = $_POST['ewww_image_optimizer_cloud_key'];
 	}
 	if ( empty( $api_key ) ) {
-		ewwwio_debug_message( $api_key );
+		ewwwio_debug_message( 'no api key' );
 		if ( ewww_image_optimizer_get_option( 'ewww_image_optimizer_jpg_level' ) > 10 ) {
 			update_option( 'ewww_image_optimizer_jpg_level', 10 );
 		}
@@ -3933,9 +3933,9 @@ function ewwwio_memory_output() {
 // EWWW replacements
 
 // adds table to db for storing status of auxiliary images that have been optimized
-function ewww_image_optimizer_install_table() {
+function ewww_image_optimizer_install_sqlite_table() {
 	global $wpdb;
-	if ( ! isset( $wpdb ) ) {
+	if ( ! isset( $wpdb ) && ! defined( 'DB_NAME' ) ) {
 		$wpdb = new wpdb( ABSPATH . 'ewwwio.db' );
 	}
 
@@ -3964,6 +3964,51 @@ function ewww_image_optimizer_install_table() {
 		autoload text DEFAULT 'yes'
 	);";
 	$options = $wpdb->query( $options_sql );
+	ewwwio_debug_message( '<b>' . __FUNCTION__ . '()</b>' );
+}
+
+// adds table to db for storing status of auxiliary images that have been optimized
+function ewww_image_optimizer_install_mysql_table() {
+	global $wpdb;
+	if ( ! isset( $wpdb ) && defined( 'DB_NAME' ) && DB_NAME ) {
+		$wpdb = new wpdb( DB_USER, DB_PASSWORD, DB_NAME, DB_HOST );
+	}
+	if ( ! isset( $wpdb->ewwwio_images ) ) {
+		$wpdb->ewwwio_images = $wpdb->prefix . "ewwwio_images";
+	}
+
+	//see if the path column exists, and what collation it uses to determine the column index size
+	if ( $wpdb->get_var( "SHOW TABLES LIKE '$wpdb->ewwwio_images'" ) == $wpdb->ewwwio_images ) {
+		return;
+	}
+	// get the current wpdb charset and collation
+	$charset_collate = $wpdb->get_charset_collate();
+
+	// create a table with 4 columns: an id, the file path, the md5sum, and the optimization results
+	$images_sql = "CREATE TABLE $wpdb->ewwwio_images (
+		id mediumint(9) NOT NULL AUTO_INCREMENT,
+		path text NOT NULL,
+		results varchar(55) NOT NULL,
+		image_size int(10) unsigned,
+		orig_size int(10) unsigned,
+		updates int(5) unsigned,
+		updated timestamp DEFAULT '0000-00-00 00:00:00' ON UPDATE CURRENT_TIMESTAMP,
+		trace blob,
+		UNIQUE KEY id (id),
+		KEY path_image_size (path(191),image_size)
+	) $charset_collate;";
+
+	$images = $wpdb->query( $images_sql );
+	$options_sql = "CREATE TABLE $wpdb->options (
+		option_id bigint(20) unsigned NOT NULL auto_increment,
+		option_name varchar(191) NOT NULL default '',
+		option_value longtext NOT NULL,
+		autoload varchar(20) NOT NULL default 'yes',
+		PRIMARY KEY  (option_id),
+		UNIQUE KEY option_name (option_name)
+		) $charset_collate;";
+	$options = $wpdb->query( $options_sql );
+
 	ewwwio_debug_message( '<b>' . __FUNCTION__ . '()</b>' );
 }
 
@@ -4152,7 +4197,7 @@ function add_action() {
 function add_filter() {
 }
 
-function apply_filters( $data ) {
+function apply_filters( $hook, $data ) {
 	return $data;
 }
 
@@ -4260,7 +4305,12 @@ function add_option( $option, $value = '', $deprecated = '', $autoload = 'yes' )
 	$serialized_value = maybe_serialize( $value );
 	$autoload = ( 'no' === $autoload || false === $autoload ) ? 'no' : 'yes';
 
-	$result = $wpdb->query( $wpdb->prepare( "INSERT OR IGNORE INTO `$wpdb->options` (`option_name`, `option_value`, `autoload`) VALUES (%s, %s, %s)", $option, $serialized_value, $autoload ) );
+	if ( $wpdb->is_mysql ) {
+		//$result = $wpdb->query( $wpdb->prepare( "INSERT IGNORE INTO `$wpdb->options` (`option_name`, `option_value`, `autoload`) VALUES (%s, %s, %s) ON DUPLICATE KEY UPDATE `option_name` = VALUES(`option_name`), `option_value` = VALUES(`option_value`), `autoload` = VALUES(`autoload`)", $option, $serialized_value, $autoload ) );
+		$result = $wpdb->query( $wpdb->prepare( "INSERT IGNORE INTO `$wpdb->options` (`option_name`, `option_value`, `autoload`) VALUES (%s, %s, %s)", $option, $serialized_value, $autoload ) );
+	} else {
+		$result = $wpdb->query( $wpdb->prepare( "INSERT OR IGNORE INTO `$wpdb->options` (`option_name`, `option_value`, `autoload`) VALUES (%s, %s, %s)", $option, $serialized_value, $autoload ) );
+	}
 	if ( ! $result && $wpdb->ready )
 		return false;
 

@@ -12,16 +12,6 @@
 /**
  * @since 0.71
  */
-define( 'OBJECT', 'OBJECT' );
-
-/**
- * @since 2.5.0
- */
-define( 'OBJECT_K', 'OBJECT_K' );
-
-/**
- * @since 0.71
- */
 define( 'ARRAY_A', 'ARRAY_A' );
 
 /**
@@ -336,6 +326,7 @@ class wpdb {
 	 */
 	//public $is_mysql = null;
 
+	public $is_mysql = false;
 	/**
 	 * A list of incompatible SQL modes.
 	 *
@@ -1635,7 +1626,7 @@ class wpdb {
 		} elseif ( $output == ARRAY_N ) {
 			return $this->last_result[$y] ? array_values( $this->last_result[$y] ) : null;
 		} else {
-			$this->print_error( " \$db->get_row(string query, output type, int offset) -- Output type must be one of: OBJECT, ARRAY_A, ARRAY_N" );
+			$this->print_error( " \$db->get_row(string query, output type, int offset) -- Output type must be one of: ARRAY_A, ARRAY_N" );
 		}
 	}
 
