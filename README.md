@@ -28,7 +28,7 @@ Scans entire folders (recursively) to optimize every image, with minimal hassle.
 
 ###Skips Previously Optimized Images
 
-All optimized images are stored in an (optional) SQLite3 or MySQL database so that the plugin does not attempt to re-optimize them unless they are modified.
+All optimized images are stored in an (optional) SQLite3 or MySQL database so that the application does not attempt to re-optimize them unless they are modified.
 
 ###WebP Images
 
@@ -82,6 +82,9 @@ https://developers.google.com/speed/docs/insights/OptimizeImages
 Pngout, TinyJPG/TinyPNG, JPEGmini, and Pngquant were recommended by EWWW IO users. Pngout (usually) optimizes better than Optipng, and best when they are used together. TinyJPG is the best lossy compression tool that I have found for JPG images. Pngquant is an excellent lossy optimizer for PNGs, and is one of the tools used by TinyPNG.
 
 ##Changelog
+
+###0.30
+* Added MySQL support, and fixed bug with apply_filters()
 
 ###0.20
 * API enabled, notices fixed, webp updated, config options working properly, and other goodness. still might eat your cat
