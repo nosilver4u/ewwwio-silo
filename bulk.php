@@ -472,7 +472,7 @@ function ewww_image_optimizer_bulk_loop() {
 	session_write_close();
 	// retrieve the time when the optimizer starts
 	$started = microtime( true );
-	if ( ini_get( 'max_execution_time' ) ) {
+	if ( ewww_image_optimizer_stl_check() ) {
 		set_time_limit( 0 );
 	}
 	// find out if our nonce is on it's last leg/tick

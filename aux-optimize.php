@@ -213,7 +213,7 @@ function ewww_image_optimizer_image_scan( $dir ) {
 			}
 			if ( empty( $skip_optimized ) || ! empty( $_REQUEST['ewww_force'] ) || ! empty( $ewwwio_cli->force ) ) {
 				ewwwio_debug_message( "queued $path" );
-				$images[] = $path;
+				$images[] = utf8_encode( $path );
 			}
 		}
 //		ewww_image_optimizer_debug_log();

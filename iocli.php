@@ -196,7 +196,7 @@ function ewww_image_optimizer_bulk_other( $attachments ) {
 		if ( ! empty( $attachments_left ) ) {
 			array_shift( $attachments_left );
 		}
-		// store the updated list of attachment IDs back in the 'bulk_attachments' option
+		// store the updated list of attachments back in the 'bulk_attachments' option
 		update_option( 'ewww_image_optimizer_bulk_attachments', $attachments_left );
 		$current++;
 		// output the path
