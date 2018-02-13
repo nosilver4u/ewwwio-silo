@@ -2,6 +2,7 @@
 // common functions for Standard and Cloud plugins
 
 // TODO: make sure to update timestamp field in table for image record
+// TODO: port scan optimizations from core, and do the batch insert record stuff for more resiliant processing
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;

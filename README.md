@@ -4,7 +4,9 @@
 License: GPLv3
 
 This is a port of the EWWW Image Optimizer plugin for WordPress that reduces image sizes in standalone (SILO) mode using lossless/lossy methods and image format conversion. It is currently in Alpha status, and contains copious amount of the WP code still. Some of that is intential, like the port of the wpdb class to interface with SQLite3/MySQL, but some just needs cleaning.
-SILO edition is a PHP application that will optimize your images from the command-line (and soon with a web-interface). It can re-compress your images, will eventually be able to convert your images automatically to the file format that will produce the smallest image size, and can currently apply lossy compression to achieve huge savings for PNG and JPG images.
+SILO edition is a PHP application that will optimize your images from the command-line. It can re-compress your images, will eventually be able to convert your images automatically to the file format that will produce the smallest image size, and can currently apply lossy compression to achieve huge savings for PNG and JPG images.
+
+To use, copy config.sample.php to config.php and edit to your needs, then run cli.php from the command line.
 
 ###Why use EWWW Image Optimizer?
 
@@ -36,7 +38,7 @@ Can generate WebP versions of your images (will not remove originals, since you'
 
 ###PHP CLI
 
-Lets you optimize entire folders, or single images. Run `php cli.php -h` for command-line syntax. Allows you to do things like run it in 'screen' or via cron. 
+Lets you optimize entire folders, or single images. Run `php cli.php -h` for command-line syntax. Allows you to do things like run it in 'screen' or via cron.
 
 ###CDN Support (in the future)
 
