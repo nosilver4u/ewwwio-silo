@@ -1,4 +1,4 @@
-#EWWW Image Optimizer - SILO edition
+# EWWW Image Optimizer - SILO edition
 [Donate](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MKMQKCBFFG3WW)
 
 License: GPLv3
@@ -8,7 +8,7 @@ SILO edition is a PHP application that will optimize your images from the comman
 
 To use, copy config.sample.php to config.php and edit to your needs, then run cli.php from the command line.
 
-###Why use EWWW Image Optimizer?
+### Why use EWWW Image Optimizer?
 
 1. **Your pages will load faster.** Smaller image sizes means faster page loads. This will make your visitors happy, and can increase revenue.
 2. **Faster backups.** Smaller image sizes also means faster backups.
@@ -28,19 +28,19 @@ EWWW Image Optimizer calls optimization utilities directly which is well suited 
 
 Scans entire folders (recursively) to optimize every image, with minimal hassle.
 
-###Skips Previously Optimized Images
+### Skips Previously Optimized Images
 
 All optimized images are stored in an (optional) SQLite3 or MySQL database so that the application does not attempt to re-optimize them unless they are modified.
 
-###WebP Images
+### WebP Images
 
 Can generate WebP versions of your images (will not remove originals, since you'll need both versions to support all browsers), and enables you to serve even smaller images to supported browsers.
 
-###PHP CLI
+### PHP CLI
 
 Lets you optimize entire folders, or single images. Run `php cli.php -h` for command-line syntax. Allows you to do things like run it in 'screen' or via cron.
 
-###CDN Support (in the future)
+### CDN Support (in the future)
 
 Planning to add the ability to upload to Amazon S3, Azure Storage, Cloudinary, and DreamSpeed CDN.
 
@@ -48,33 +48,33 @@ Planning to add the ability to upload to Amazon S3, Azure Storage, Cloudinary, a
 
 Make sure you have php-cli, and php-sqlite3 available. The SQLite3 or Mysqli extensions are optional, but will allow EWWW IO to keep track of which images have been compressed already, if you intend to run it regularly. There is a sample config file at config.sample.php which you can copy to config.php and customize to your liking. If the SQLite3 or Mysqli extensions are available, options may also be stored in the database, otherwise, they will be read from the config file, or use the defaults.
 
-###Installing pngout
+### Installing pngout
 
 Pngout is not enabled by default because it is resource intensive and not redistributable. Optipng is the preferred PNG optimizer if you have resource (CPU) constraints. Pngout is also not open-source for those who care about such things, but the command-line version is free. You can download the appropriate version from http://advsys.net/ken/utils.htm and install it in the ewwwio-silo/tools/ folder.
 
-##Frequently Asked Questions
+## Frequently Asked Questions
 
-###Google Pagespeed says my images need compressing or resizing, but I already optimized all my images. What do I do?
+### Google Pagespeed says my images need compressing or resizing, but I already optimized all my images. What do I do?
 
 Try this for starters: https://ewww.io/2014/12/05/pagespeed-says-my-images-need-more-work/
 
-###It complains that I'm missing something, what do I do?
+### It complains that I'm missing something, what do I do?
 
 This article will walk you through installing the required tools (and the alternatives if installation does not work): https://ewww.io/2014/12/06/the-plugin-says-im-missing-something/
 
-###Does EWWW IO replace existing images?
+### Does EWWW IO replace existing images?
 
 Yes, but only if the optimized version is smaller. The plugin should NEVER create a larger image.
 
-###Can I resize my images with this plugin?
+### Can I resize my images with this plugin?
 
 Not yet, but it's on my radar. [The WordPress plugin can though](https://ewww.io).
 
-###Can I lower the compression setting for JPGs to save more space?
+### Can I lower the compression setting for JPGs to save more space?
 
 The lossy optimization using the EWWW IO Cloud service will determine the ideal quality setting and save even more space. You cannot manually set the quality with this plugin, if you want more compression, you should REALLY try EWWW IO Cloud at https://ewww.io/plans/.
 
-###I want to know more about image optimization, and why you chose these options/tools.
+### I want to know more about image optimization, and why you chose these options/tools.
 
 That's not a question, but since I made it up, I'll answer it. See these resources:  
 http://developer.yahoo.com/performance/rules.html#opt_images  
@@ -83,17 +83,17 @@ https://developers.google.com/speed/docs/insights/OptimizeImages
 
 Pngout, TinyJPG/TinyPNG, JPEGmini, and Pngquant were recommended by EWWW IO users. Pngout (usually) optimizes better than Optipng, and best when they are used together. TinyJPG is the best lossy compression tool that I have found for JPG images. Pngquant is an excellent lossy optimizer for PNGs, and is one of the tools used by TinyPNG.
 
-##Changelog
+## Changelog
 
-###0.30
+### 0.30
 * Added MySQL support, and fixed bug with apply_filters()
 
-###0.20
+### 0.20
 * API enabled, notices fixed, webp updated, config options working properly, and other goodness. still might eat your cat
 
-###0.10
+### 0.10
 * initial release, may eat your cat
 
-##Contact and Credits
+## Contact and Credits
 
 Written by [Shane Bishop](https://ewww.io). Based upon CW Image Optimizer, which was written by [Jacob Allred](http://www.jacoballred.com/) at [Corban Works, LLC](http://www.corbanworks.com/). CW Image Optimizer was based on WP Smush.it. Jpegtran is the work of the Independent JPEG Group.  
