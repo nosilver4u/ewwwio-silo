@@ -85,13 +85,13 @@ class EWWWIO_CLI {
 		// do the optimization for the current image
 		$results = ewww_image_optimizer( $attachment, 4, false, false );
 		// output the path
-		EWWWIO_CLI::line( __('Optimized image:', EWWW_IMAGE_OPTIMIZER_DOMAIN) . ' ' . $attachment );
+		$this->line( __('Optimized image:', EWWW_IMAGE_OPTIMIZER_DOMAIN) . ' ' . $attachment );
 		// tell the user what the results were for the original image
-		EWWWIO_CLI::success( html_entity_decode( $results[1] ) );
+		$this->success( html_entity_decode( $results[1] ) );
 		// calculate how much time has elapsed since we started
 		$elapsed = microtime(true) - $started;
 		// output how much time has elapsed since we started
-		EWWWIO_CLI::line( sprintf( __( 'Elapsed: %.3f seconds', EWWW_IMAGE_OPTIMIZER_DOMAIN ), $elapsed) );
+		$this->line( sprintf( __( 'Elapsed: %.3f seconds', EWWW_IMAGE_OPTIMIZER_DOMAIN ), $elapsed) );
 	}
 
 	function parse_args() {
@@ -150,12 +150,11 @@ $ewwwio_cli = new EWWWIO_CLI();
 // displays the 'Optimize Everything Else' section of the Bulk Optimize page
 function ewww_image_optimizer_scan_other( $folder = null ) {
 	global $wpdb;
-//	$aux_resume = get_option('ewww_image_optimizer_aux_resume');
+
 	// initialize the $attachments variable for auxiliary images
 	$attachments = null;
-	// check the 'bulk resume' option
-//	$resume = get_option('ewww_image_optimizer_aux_resume');
-        // check if there is a previous bulk operation to resume
+
+    // check if there is a previous bulk operation to resume
 	if ( $folder && is_dir( $folder ) ) {
 		$attachments = ewww_image_optimizer_image_scan( $folder );
 		// store the filenames we retrieved in the 'bulk_attachments' option so we can keep track of our progress in the database
@@ -183,7 +182,6 @@ function ewww_image_optimizer_bulk_other( $attachments ) {
 	// store the time and number of images for later display
 	$count = count( $attachments );
 	$current = 0;
-//	update_option('ewww_image_optimizer_bulk_last', array(time(), $count));
 	foreach ( $attachments as $attachment ) {
 		sleep( $ewwwio_cli->delay );
 		// retrieve the time when the optimizer starts
@@ -200,22 +198,21 @@ function ewww_image_optimizer_bulk_other( $attachments ) {
 		update_option( 'ewww_image_optimizer_bulk_attachments', $attachments_left );
 		$current++;
 		// output the path
-		EWWWIO_CLI::line( "($current/$count) " . __('Optimized image:', EWWW_IMAGE_OPTIMIZER_DOMAIN) . ' ' . $attachment );
+		$ewwwio_cli->line( "($current/$count) " . __('Optimized image:', EWWW_IMAGE_OPTIMIZER_DOMAIN) . ' ' . $attachment );
 		// tell the user what the results were for the original image
-		EWWWIO_CLI::line( html_entity_decode( $results[1] ) );
+		$ewwwio_cli->line( html_entity_decode( $results[1] ) );
 		// calculate how much time has elapsed since we started
 		$elapsed = microtime(true) - $started;
 		// output how much time has elapsed since we started
-		EWWWIO_CLI::line( sprintf( __( 'Elapsed: %.3f seconds', EWWW_IMAGE_OPTIMIZER_DOMAIN ), $elapsed) );
+		$ewwwio_cli->line( sprintf( __( 'Elapsed: %.3f seconds', EWWW_IMAGE_OPTIMIZER_DOMAIN ), $elapsed) );
 	} 
-//	$stored_last = get_option('ewww_image_optimizer_aux_last');
-//	update_option('ewww_image_optimizer_aux_last', array(time(), $stored_last[1]));
 	// all done, so we can update the bulk options with empty values
 	update_option('ewww_image_optimizer_bulk_resume', '');
 	update_option('ewww_image_optimizer_bulk_attachments', '');
 	// and let the user know we are done
-	EWWWIO_CLI::success( __('Finished Optimization!', EWWW_IMAGE_OPTIMIZER_DOMAIN) );
+	$ewwwio_cli->success( __('Finished Optimization!', EWWW_IMAGE_OPTIMIZER_DOMAIN) );
 }
+
 // from https://www.if-not-true-then-false.com/2010/php-class-for-coloring-php-command-line-cli-scripts-output-php-output-colorizing-using-bash-shell-colors/
 class Colors {
 	private $foreground_colors = array();

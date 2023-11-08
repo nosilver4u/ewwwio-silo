@@ -38,4 +38,3 @@ if ( isset( $args['single'] ) ) {
 } else {
 	$ewwwio_cli->optimize( $args );
 }
-?>

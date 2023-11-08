@@ -40,17 +40,9 @@ Can generate WebP versions of your images (will not remove originals, since you'
 
 Lets you optimize entire folders, or single images. Run `php cli.php -h` for command-line syntax. Allows you to do things like run it in 'screen' or via cron.
 
-### CDN Support (in the future)
-
-Planning to add the ability to upload to Amazon S3, Azure Storage, Cloudinary, and DreamSpeed CDN.
-
 ## Pre-requisites
 
-Make sure you have php-cli, and php-sqlite3 available. The SQLite3 or Mysqli extensions are optional, but will allow EWWW IO to keep track of which images have been compressed already, if you intend to run it regularly. There is a sample config file at config.sample.php which you can copy to config.php and customize to your liking. If the SQLite3 or Mysqli extensions are available, options may also be stored in the database, otherwise, they will be read from the config file, or use the defaults.
-
-### Installing pngout
-
-Pngout is not enabled by default because it is resource intensive and not redistributable. Optipng is the preferred PNG optimizer if you have resource (CPU) constraints. Pngout is also not open-source for those who care about such things, but the command-line version is free. You can download the appropriate version from http://advsys.net/ken/utils.htm and install it in the ewwwio-silo/tools/ folder.
+SILO requires at least PHP 7.x, and make sure you have php-cli and php-sqlite3 available. The SQLite3 or Mysqli extensions are optional, but will allow EWWW IO to keep track of which images have been compressed already, if you intend to run it regularly. There is a sample config file at config.sample.php which you can copy to config.php and customize to your liking. If the SQLite3 or Mysqli extensions are available, options may also be stored in the database, otherwise, they will be read from the config file, or use the defaults.
 
 ## Frequently Asked Questions
 
@@ -81,9 +73,12 @@ http://developer.yahoo.com/performance/rules.html#opt_images
 https://developers.google.com/speed/docs/best-practices/payload#CompressImages  
 https://developers.google.com/speed/docs/insights/OptimizeImages
 
-Pngout, TinyJPG/TinyPNG, JPEGmini, and Pngquant were recommended by EWWW IO users. Pngout (usually) optimizes better than Optipng, and best when they are used together. TinyJPG is the best lossy compression tool that I have found for JPG images. Pngquant is an excellent lossy optimizer for PNGs, and is one of the tools used by TinyPNG.
+TinyJPG/TinyPNG, JPEGmini, and Pngquant were recommended by EWWW IO users. Pngout (usually) optimizes better than Optipng, and best when they are used together. TinyJPG is the best lossy compression tool that I have found for JPG images. Pngquant is an excellent lossy optimizer for PNGs, and is one of the tools used by TinyPNG.
 
 ## Changelog
+
+### 0.50
+* Fixed PHP 7/8 compatibility
 
 ### 0.30
 * Added MySQL support, and fixed bug with apply_filters()

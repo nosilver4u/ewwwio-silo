@@ -46,11 +46,6 @@ if ( ! isset( $wpdb->ewwwio_images ) ) {
 }
 
 //let's get going
-$disabled = ini_get( 'disable_functions' );
-if ( ! preg_match( '/get_current_user/', $disabled ) ) {
-	ewwwio_debug_message( get_current_user() );
-}
-
 ewwwio_debug_message( 'EWWW IO version: ' . EWWW_IMAGE_OPTIMIZER_VERSION );
 
 // check the PHP version
@@ -64,9 +59,7 @@ if ( defined( 'PHP_VERSION_ID' ) ) {
 
 ewww_image_optimizer_cloud_verify();
 ewww_image_optimizer_admin_init();
-if ( ! class_exists( 'SQLite3' ) && ! defined( 'DB_NAME' ) )
+if ( ! class_exists( 'SQLite3' ) && ! defined( 'DB_NAME' ) ) {
 	ewww_image_optimizer_cloud_verify(); //run it again to override defaults if necessary
+}
 
-// Hooks
-// TODO: add alternative post indicator on settings to install pngout
-add_action( 'admin_action_ewww_image_optimizer_install_pngout', 'ewww_image_optimizer_install_pngout' );
