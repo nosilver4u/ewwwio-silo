@@ -8,9 +8,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 function ewww_image_optimizer_cloud_init() {
 	ewwwio_debug_message( '<b>' . __FUNCTION__ . '()</b>' );
 	if ( ! defined( 'EWWW_IMAGE_OPTIMIZER_CLOUD' ) && ewww_image_optimizer_get_option( 'ewww_image_optimizer_cloud_key' ) && ewww_image_optimizer_get_option( 'ewww_image_optimizer_jpg_level' ) > 10 && ewww_image_optimizer_get_option( 'ewww_image_optimizer_png_level' ) > 10 ) {
-		define( 'EWWW_IMAGE_OPTIMIZER_CLOUD', TRUE );
+		define( 'EWWW_IMAGE_OPTIMIZER_CLOUD', true );
 	} elseif ( ! defined( 'EWWW_IMAGE_OPTIMIZER_CLOUD' ) ) {
-		define( 'EWWW_IMAGE_OPTIMIZER_CLOUD', FALSE );
+		define( 'EWWW_IMAGE_OPTIMIZER_CLOUD', false );
 	}
 	ewwwio_memory( __FUNCTION__ );
 }
@@ -30,15 +30,6 @@ function ewww_image_optimizer_exec_init() {
 		ewww_image_optimizer_disable_tools();
 	} else {
 		ewww_image_optimizer_tool_init();
-		add_action( 'load-upload.php', 'ewww_image_optimizer_tool_init', 9 );
-		add_action( 'load-media-new.php', 'ewww_image_optimizer_tool_init' );
-		add_action( 'load-media_page_ewww-image-optimizer-bulk', 'ewww_image_optimizer_tool_init' );
-		add_action( 'load-settings_page_ewww-image-optimizer/ewww-image-optimizer', 'ewww_image_optimizer_tool_init' );
-		add_action( 'load-plugins.php', 'ewww_image_optimizer_tool_init' );
-		add_action( 'load-ims_gallery_page_ewww-ims-optimize', 'ewww_image_optimizer_tool_init' );
-		add_action( 'load-media_page_ewww-image-optimizer-unoptimized', 'ewww_image_optimizer_tool_init' );
-		add_action( 'load-flagallery_page_flag-manage-gallery', 'ewww_image_optimizer_tool_init' );
-//		add_action( 'load-', 'ewww_image_optimizer_tool_init' );
 	} 
 	ewwwio_memory( __FUNCTION__ );
 }
@@ -347,24 +338,24 @@ function ewww_image_optimizer_skip_tools() {
 	$skip['jpegtran'] = false;
 	$skip['optipng'] = false;
 	$skip['gifsicle'] = false;
-	$skip['pngout'] = false;
+	$skip['pngout'] = true;
 	// except these which are off by default
 	$skip['pngquant'] = true;
 	$skip['webp'] = true;
 	// if the user has disabled a variable, we aren't going to bother checking to see if it is there
-	if ( ewww_image_optimizer_get_option( 'ewww_image_optimizer_jpg_level' ) == 0 || ewww_image_optimizer_get_option( 'ewww_image_optimizer_jpg_level' ) > 10 ) {
+	if ( (int) ewww_image_optimizer_get_option( 'ewww_image_optimizer_jpg_level' ) === 0 || ewww_image_optimizer_get_option( 'ewww_image_optimizer_jpg_level' ) > 10 ) {
 		$skip['jpegtran'] = true;
 	}
-	if ( ewww_image_optimizer_get_option( 'ewww_image_optimizer_disable_optipng' ) || ewww_image_optimizer_get_option( 'ewww_image_optimizer_png_level' ) == 0 || ( ewww_image_optimizer_get_option( 'ewww_image_optimizer_cloud_key' ) && ewww_image_optimizer_get_option( 'ewww_image_optimizer_png_level' ) > 10 ) ) {
+	if ( ewww_image_optimizer_get_option( 'ewww_image_optimizer_disable_optipng' ) || (int) ewww_image_optimizer_get_option( 'ewww_image_optimizer_png_level' ) === 0 || ( ewww_image_optimizer_get_option( 'ewww_image_optimizer_cloud_key' ) && ewww_image_optimizer_get_option( 'ewww_image_optimizer_png_level' ) > 10 ) ) {
 		$skip['optipng'] = true;
 	}
-	if ( ewww_image_optimizer_get_option( 'ewww_image_optimizer_gif_level' ) == 0 || ewww_image_optimizer_get_option( 'ewww_image_optimizer_cloud_key' ) ) {
+	if ( (int) ewww_image_optimizer_get_option( 'ewww_image_optimizer_gif_level' ) === 0 || ewww_image_optimizer_get_option( 'ewww_image_optimizer_cloud_key' ) ) {
 		$skip['gifsicle'] = true;
 	}
-	if ( ewww_image_optimizer_get_option( 'ewww_image_optimizer_disable_pngout' ) || ewww_image_optimizer_get_option( 'ewww_image_optimizer_png_level' ) == 0 || ( ewww_image_optimizer_get_option( 'ewww_image_optimizer_cloud_key' ) && ewww_image_optimizer_get_option( 'ewww_image_optimizer_png_level' ) > 10 ) ) {
+	if ( ewww_image_optimizer_get_option( 'ewww_image_optimizer_disable_pngout' ) || (int) ewww_image_optimizer_get_option( 'ewww_image_optimizer_png_level' ) === 0 || ( ewww_image_optimizer_get_option( 'ewww_image_optimizer_cloud_key' ) && ewww_image_optimizer_get_option( 'ewww_image_optimizer_png_level' ) > 10 ) ) {
 		$skip['pngout'] = true;
 	}
-	if ( ewww_image_optimizer_get_option( 'ewww_image_optimizer_png_level' ) == 40 && ! ewww_image_optimizer_get_option( 'ewww_image_optimizer_cloud_key' ) ) {
+	if ( (int) ewww_image_optimizer_get_option( 'ewww_image_optimizer_png_level' ) === 40 && ! ewww_image_optimizer_get_option( 'ewww_image_optimizer_cloud_key' ) ) {
 		$skip['pngquant'] = false;
 	}
 	if ( ewww_image_optimizer_get_option( 'ewww_image_optimizer_webp' ) && ! ( ewww_image_optimizer_get_option( 'ewww_image_optimizer_cloud_key' ) && ewww_image_optimizer_get_option( 'ewww_image_optimizer_jpg_level' ) > 10 && ewww_image_optimizer_get_option( 'ewww_image_optimizer_png_level' ) > 10 ) ) {
@@ -1666,6 +1657,7 @@ function ewww_image_optimizer( $file, $gallery_type = 4, $converted = false, $ne
 			break;
 		case 'image/png':
 			$jpg_size = 0;
+			$api_jpg_fill = '';
 			// png2jpg conversion is turned on, and the image is in the wordpress media library
 			if ( ( ewww_image_optimizer_get_option( 'ewww_image_optimizer_png_to_jpg' ) || ! empty( $_GET['ewww_convert'] ) )
 				&& $gallery_type == 1 && ! $skip_lossy
@@ -1676,10 +1668,11 @@ function ewww_image_optimizer( $file, $gallery_type = 4, $converted = false, $ne
 				if ($background = ewww_image_optimizer_jpg_background()) {
 					// set background color for GD
 					$r = hexdec('0x' . strtoupper(substr($background, 0, 2)));
-                                        $g = hexdec('0x' . strtoupper(substr($background, 2, 2)));
+                    $g = hexdec('0x' . strtoupper(substr($background, 2, 2)));
 					$b = hexdec('0x' . strtoupper(substr($background, 4, 2)));
 					// set the background flag for 'convert'
-					$background = "-background " . '"' . "#$background" . '"';
+					$background   = "-background " . '"' . "#$background" . '"';
+					$api_jpg_fill = "#$background";
 				} else {
 					$r = '';
 					$g = '';
@@ -1721,7 +1714,7 @@ function ewww_image_optimizer( $file, $gallery_type = 4, $converted = false, $ne
 				}
 			}
 			if ( ewww_image_optimizer_get_option( 'ewww_image_optimizer_png_level' ) >= 20 && ewww_image_optimizer_get_option( 'ewww_image_optimizer_cloud_key' ) ) {
-				list( $file, $converted, $result, $new_size ) = ewww_image_optimizer_cloud_optimizer( $file, $type, $convert, $jpgfile, 'image/jpeg', $skip_lossy, array( 'r' => $r, 'g' => $g, 'b' => $b, 'quality' => $gquality ) );
+				list( $file, $converted, $result, $new_size ) = ewww_image_optimizer_cloud_optimizer( $file, $type, $convert, $jpgfile, 'image/jpeg', $skip_lossy, $api_jpg_fill, $gquality );
 				if ( $converted ) {
 					if ( ewww_image_optimizer_get_option( 'ewww_image_optimizer_delete_originals' ) == TRUE ) {
 						// delete the original JPG

@@ -78,6 +78,12 @@ TinyJPG/TinyPNG, JPEGmini, and Pngquant were recommended by EWWW IO users. Pngou
 ## Changelog
 
 ### 0.50
+* Updated Requests library
+* Fixed API SSL issues
+* Fixed API options initialization
+* Updated to API v2 endpoint
+
+### 0.40
 * Fixed PHP 7/8 compatibility
 
 ### 0.30

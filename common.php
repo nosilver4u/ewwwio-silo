@@ -54,6 +54,7 @@ function ewww_image_optimizer_upgrade() {
 	if ( get_option( 'ewww_image_optimizer_version' ) < EWWW_IMAGE_OPTIMIZER_VERSION ) {
 		ewww_image_optimizer_set_defaults();
 		update_option( 'ewww_image_optimizer_version', EWWW_IMAGE_OPTIMIZER_VERSION );
+		load_overrides();
 	}
 	ewwwio_memory( __FUNCTION__ );
 //	ewww_image_optimizer_debug_log();
@@ -76,6 +77,9 @@ function ewww_image_optimizer_admin_init() {
 // sets all the tool constants to false
 function ewww_image_optimizer_disable_tools() {
 	ewwwio_debug_message( '<b>' . __FUNCTION__ . '()</b>' );
+	if ( ! defined( 'EWWW_IMAGE_OPTIMIZER_NOEXEC' ) ) {
+		define( 'EWWW_IMAGE_OPTIMIZER_NOEXEC', true );
+	}
 	if ( ! defined( 'EWWW_IMAGE_OPTIMIZER_JPEGTRAN' ) ) {
 		define('EWWW_IMAGE_OPTIMIZER_JPEGTRAN', false);
 	}
@@ -647,7 +651,7 @@ function ewww_image_optimizer_cloud_verify( $cache = true, $api_key = '' ) {
 		ewwwio_debug_message( 'using cached verification' );
 		return $ewww_cloud_status;
 	}
-		$result = ewww_image_optimizer_cloud_post_key( 'optimize.exactlywww.com', 'https', $api_key );
+		$result = ewww_image_optimizer_cloud_post_key( $api_key );
 		if ( empty( $result->success ) ) { 
 			$result->throw_for_status( false );
 			ewwwio_debug_message( "verification failed" );
@@ -672,9 +676,10 @@ function ewww_image_optimizer_cloud_verify( $cache = true, $api_key = '' ) {
 	}
 }
 
-function ewww_image_optimizer_cloud_post_key( $ip, $transport, $key ) {
+function ewww_image_optimizer_cloud_post_key( $key ) {
 	$useragent = ewww_image_optimizer_cloud_useragent();
-	$result = Requests::post( "$transport://$ip/verify/", array(), array( 'api_key' => $key ), array( 'timeout' => 5, 'useragent' => $useragent ) );
+	$url       = 'https://optimize.exactlywww.com/verify/';
+	$result    = WpOrg\Requests\Requests::post( $url, array(), array( 'api_key' => $key ), array( 'timeout' => 5, 'useragent' => $useragent ) );
 	return $result;
 }
 
@@ -682,18 +687,12 @@ function ewww_image_optimizer_cloud_post_key( $ip, $transport, $key ) {
 function ewww_image_optimizer_cloud_quota() {
 	ewwwio_debug_message( '<b>' . __FUNCTION__ . '()</b>' );
 	$api_key = ewww_image_optimizer_get_option( 'ewww_image_optimizer_cloud_key' );
-	$url = "https://optimize.exactlywww.com/quota/";
+	$url = 'https://optimize.exactlywww.com/quota/';
 	$useragent = ewww_image_optimizer_cloud_useragent();
-	$result = Requests::post( $url, array(), array( 'api_key' => $api_key ), array( 'timeout' => 5, 'useragent' => $useragent ) );
-	/*$result = wp_remote_post( $url, array(
-		'timeout' => 5,
-		'sslverify' => false,
-		'body' => array( 'api_key' => $api_key )
-	) );*/
+	$result = WpOrg\Requests\Requests::post( $url, array(), array( 'api_key' => $api_key ), array( 'timeout' => 5, 'useragent' => $useragent ) );
 	if ( ! $result->success ) {
 		$result->throw_for_status( false );
 		ewwwio_debug_message( "quota request failed: $error_message" );
-		ewwwio_memory( __FUNCTION__ );
 		return '';
 	} elseif ( ! empty( $result->body ) ) {
 		ewwwio_debug_message( "quota data retrieved: " . $result->body );
@@ -716,16 +715,17 @@ function ewww_image_optimizer_cloud_quota() {
  *
  * Returns an array of the $file, $results, $converted to tell us if an image changes formats, and the $original file if it did.
  *
- * @param   string $file		Full absolute path to the image file
- * @param   string $type		mimetype of $file
- * @param   boolean $convert		true says we want to attempt conversion of $file
- * @param   string $newfile		filename of new converted image
- * @param   string $newtype		mimetype of $newfile
- * @param   boolean $fullsize		is this the full-size original?
- * @param   array $jpg_params		r, g, b values and jpg quality setting for conversion
+ * @param string  $file		Full absolute path to the image file
+ * @param string  $type		mimetype of $file
+ * @param boolean $convert		true says we want to attempt conversion of $file
+ * @param string  $newfile		filename of new converted image
+ * @param string  $newtype Mimetype of $newfile
+ * @param boolean $fullsize Is this the full-size original?
+ * @param string  $jpg_fill Optional. Fill color for PNG to JPG conversion in hex format.
+ * @param int     $jpg_quality Optional. JPG quality level. Default null. Accepts 1-100.
  * @returns array
 */
-function ewww_image_optimizer_cloud_optimizer( $file, $type, $convert = false, $newfile = null, $newtype = null, $fullsize = false, $jpg_params = array( 'r' => '255', 'g' => '255', 'b' => '255', 'quality' => null ) ) {
+function ewww_image_optimizer_cloud_optimizer( $file, $type, $convert = 0, $newfile = null, $newtype = null, $fullsize = false, $jpg_fill = '', $jpg_quality = 82 ) {
 	ewwwio_debug_message( '<b>' . __FUNCTION__ . '()</b>' );
 
 	$ewww_status = get_transient( 'ewww_image_optimizer_cloud_status' );
@@ -751,17 +751,12 @@ function ewww_image_optimizer_cloud_optimizer( $file, $type, $convert = false, $
 	if ( ewww_image_optimizer_get_option( 'ewww_image_optimizer_metadata_skip_full' ) && $fullsize ) {
 		$metadata = 1;
 	} elseif ( ewww_image_optimizer_get_option( 'ewww_image_optimizer_jpegtran_copy' ) ){
-        	// don't copy metadata
-                $metadata = 0;
-        } else {
-                // copy all the metadata
-                $metadata = 1;
-        }
-	if ( empty( $convert ) ) {
-		$convert = 0;
-	} else {
-		$convert = 1;
-	}
+    	// don't copy metadata
+        $metadata = 0;
+    } else {
+        // copy all the metadata
+        $metadata = 1;
+    }
 	$lossy_fast = 0;
 	if ( ewww_image_optimizer_get_option('ewww_image_optimizer_lossy_skip_full') && $fullsize ) {
 		$lossy = 0;
@@ -796,31 +791,27 @@ function ewww_image_optimizer_cloud_optimizer( $file, $type, $convert = false, $
 	ewwwio_debug_message( "newfile: $newfile" );
 	ewwwio_debug_message( "newtype: $newtype" );
 	ewwwio_debug_message( "webp: $webp" );
-	ewwwio_debug_message( "jpg_params: " . print_r($jpg_params, true) );
+	ewwwio_debug_message( "jpg_fill: $jpg_fill" );
+	ewwwio_debug_message( "jpg quality: $jpg_quality" );
 	$api_key = ewww_image_optimizer_get_option('ewww_image_optimizer_cloud_key');
-	$url = "https://optimize.exactlywww.com/";
+	$url = "https://optimize.exactlywww.com/v2/";
 	$boundary = generate_password( 24 );
 
 	$useragent = ewww_image_optimizer_cloud_useragent();
 	$headers = array(
         	'content-type' => 'multipart/form-data; boundary=' . $boundary,
-//		'timeout' => 90,
-//		'httpversion' => '1.0',
-//		'blocking' => true
-		);
+	);
 	$post_fields = array(
-		'filename' => $file,
-		'convert' => $convert, 
-		'metadata' => $metadata, 
-		'api_key' => $api_key,
-		'red' => $jpg_params['r'],
-		'green' => $jpg_params['g'],
-		'blue' => $jpg_params['b'],
-		'quality' => $jpg_params['quality'],
-		'compress' => $png_compress,
-		'lossy' => $lossy,
+		'filename'   => $file,
+		'convert'    => $convert, 
+		'metadata'   => $metadata, 
+		'api_key'    => $api_key,
+		'jpg_fill'   => $jpg_fill,
+		'quality'    => $jpg_quality,
+		'compress'   => $png_compress,
+		'lossy'      => $lossy,
 		'lossy_fast' => $lossy_fast,
-		'webp' => $webp,
+		'webp'       => $webp,
 	);
 
 	$payload = '';
@@ -834,7 +825,7 @@ function ewww_image_optimizer_cloud_optimizer( $file, $type, $convert = false, $
 
 	$payload .= '--' . $boundary;
 	$payload .= "\r\n";
-	$payload .= 'Content-Disposition: form-data; name="file"; filename="' . basename($file) . '"' . "\r\n";
+	$payload .= 'Content-Disposition: form-data; name="file"; filename="' . basename( $file ) . '"' . "\r\n";
 	$payload .= 'Content-Type: ' . $type . "\r\n";
 	$payload .= "\r\n";
 	$payload .= file_get_contents($file);
@@ -845,25 +836,16 @@ function ewww_image_optimizer_cloud_optimizer( $file, $type, $convert = false, $
 	$payload .= "Upload\r\n";
 	$payload .= '--' . $boundary . '--';
 
-	// retrieve the time when the optimizer starts
-//	$started = microtime(true);
-	$response = Requests::post(
+	$response = WpOrg\Requests\Requests::post(
 		$url,
 		$headers,
 		$payload,
 		array(
-			'timeout' => 90,
+			'timeout' => 300,
 			'useragent' => $useragent,
 		)
 	);
-/*	$response = wp_remote_post( $url, array(
-		'timeout' => 90,
-		'headers' => $headers,
-		'sslverify' => false,
-		'body' => $payload,
-		) );*/
-//	$elapsed = microtime(true) - $started;
-//	$ewww_debug .= "processing image via cloud took $elapsed seconds<br>";
+
 	if ( ! $response->success ) {
 		$response->throw_for_status( false );
 		ewwwio_debug_message( "optimize failed, see exception" );
@@ -875,29 +857,36 @@ function ewww_image_optimizer_cloud_optimizer( $file, $type, $convert = false, $
 		$newsize = $orig_size;
 		$converted = false;
 		$msg = '';
-		if ( preg_match( '/exceeded/', $response->body ) ) {
-			ewwwio_debug_message( 'License Exceeded' );
+		if ( 100 > strlen( $response->body ) && strpos( $response->body, 'invalid' ) ) {
+			ewwwio_debug_message( 'License invalid' );
+			$msg = 'Invalid API Key';
+		} elseif ( 100 > strlen( $response->body ) && strpos( $response->body, 'exceeded quota' ) ) {
+			ewwwio_debug_message( 'flex quota Exceeded' );
 			set_transient( 'ewww_image_optimizer_cloud_status', 'exceeded', 3600 );
-			$msg = 'exceeded';
-			unlink( $tempfile );
-		} elseif ( ewww_image_optimizer_mimetype( $tempfile, 'i' ) == $type ) {
+			$msg = 'Quota Exceeded';
+		} elseif ( 100 > strlen( $response->body ) && strpos( $response->body, 'exceeded' ) ) {
+			ewwwio_debug_message( 'quota exceeded' );
+			set_transient( 'ewww_image_optimizer_cloud_status', 'exceeded', 3600 );
+			$msg = 'Quota Exceeded';
+		} elseif ( ewww_image_optimizer_mimetype( $tempfile, 'i' ) === $type ) {
 			$newsize = filesize( $tempfile );
 			ewwwio_debug_message( "cloud results: $newsize (new) vs. $orig_size (original)" );
 			rename( $tempfile, $file );
-		} elseif ( ewww_image_optimizer_mimetype( $tempfile, 'i' ) == 'image/webp' ) {
+		} elseif ( ewww_image_optimizer_mimetype( $tempfile, 'i' ) === 'image/webp' ) {
 			$newsize = filesize( $tempfile );
 			ewwwio_debug_message( "cloud results: $newsize (new) vs. $orig_size (original)" );
 			rename( $tempfile, $newfile );
-		} elseif ( ewww_image_optimizer_mimetype( $tempfile, 'i' ) == $newtype ) {
+		} elseif ( ! is_null( $newtype) && ! is_null( $newfile ) && ewww_image_optimizer_mimetype( $tempfile, 'i' ) === $newtype ) {
 			$converted = true;
-			$newsize = filesize( $tempfile );
+			$newsize   = filesize( $tempfile );
 			ewwwio_debug_message( "cloud results: $newsize (new) vs. $orig_size (original)" );
 			rename( $tempfile, $newfile );
 			$file = $newfile;
-		} else {
+		}
+		clearstatcache();
+		if ( is_file( $tempfile ) ) {
 			unlink( $tempfile );
 		}
-		ewwwio_memory( __FUNCTION__ );
 		return array( $file, $converted, $msg, $newsize );
 	}
 }
@@ -1911,7 +1900,7 @@ function ewww_image_optimizer_display_unoptimized_media() {
 	return;	
 }
 
-// retrieve an option: use 'site' setting if plugin is network activated, otherwise use 'blog' setting
+// retrieve an option: use config.php setting if set, otherwise use db setting
 function ewww_image_optimizer_get_option( $option_name ) {
 	global $ewwwio_settings;
 /*	if ( isset( $ewwwio_settings[ $option_name ] ) ) {
@@ -2440,6 +2429,20 @@ function get_option( $option, $default = false ) {
 	return maybe_unserialize( $value );
 }
 
+function load_overrides() {
+	global $alloptions;
+	global $ewwwio_settings; // allow overrides from config.php
+
+	if ( isset( $alloptions ) ) {
+		if ( isset( $ewwwio_settings ) && is_iterable( $ewwwio_settings ) ) {
+			foreach ( $ewwwio_settings as $name => $value ) {
+				//echo "setting $name to $value\n";
+				$alloptions[ $name ] = $value;
+			}
+		}
+	}
+}
+
 function load_alloptions() {
 	global $wpdb;
 	global $alloptions;
@@ -2462,8 +2465,6 @@ function load_alloptions() {
 			}
 		}
 	}
-
-
 }
 
 function update_option( $option, $value, $autoload = null ) {
@@ -2511,7 +2512,6 @@ function add_option( $option, $value = '', $deprecated = '', $autoload = 'yes' )
 	$autoload = ( 'no' === $autoload || false === $autoload ) ? 'no' : 'yes';
 
 	if ( $wpdb->is_mysql ) {
-		//$result = $wpdb->query( $wpdb->prepare( "INSERT IGNORE INTO `$wpdb->options` (`option_name`, `option_value`, `autoload`) VALUES (%s, %s, %s) ON DUPLICATE KEY UPDATE `option_name` = VALUES(`option_name`), `option_value` = VALUES(`option_value`), `autoload` = VALUES(`autoload`)", $option, $serialized_value, $autoload ) );
 		$result = $wpdb->query( $wpdb->prepare( "INSERT IGNORE INTO `$wpdb->options` (`option_name`, `option_value`, `autoload`) VALUES (%s, %s, %s)", $option, $serialized_value, $autoload ) );
 	} else {
 		$result = $wpdb->query( $wpdb->prepare( "INSERT OR IGNORE INTO `$wpdb->options` (`option_name`, `option_value`, `autoload`) VALUES (%s, %s, %s)", $option, $serialized_value, $autoload ) );

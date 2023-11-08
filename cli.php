@@ -13,8 +13,8 @@ if ( file_exists( ABSPATH . 'config.php' ) ) {
 	include_once( ABSPATH . 'config.php' );
 }
 
-require( ABSPATH . 'classes/Requests/library/Requests.php' );
-Requests::register_autoloader();
+require_once __DIR__ . '/vendor/rmccue/requests/src/Autoload.php';
+WpOrg\Requests\Autoload::register();
 
 require( ABSPATH . 'common.php' );
 if ( defined( 'DB_NAME' ) && DB_NAME ) {
