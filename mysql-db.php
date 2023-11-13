@@ -549,14 +549,7 @@ class wpdb {
 
 		$modes = array_change_key_case( $modes, CASE_UPPER );
 
-		/**
-		 * Filters the list of incompatible SQL modes to exclude.
-		 *
-		 * @since 3.9.0
-		 *
-		 * @param array $incompatible_modes An array of incompatible modes.
-		 */
-		$incompatible_modes = (array) apply_filters( 'incompatible_sql_modes', $this->incompatible_modes );
+		$incompatible_modes = $this->incompatible_modes;
 
 		foreach ( $modes as $i => $mode ) {
 			if ( in_array( $mode, $incompatible_modes ) ) {
@@ -572,170 +565,6 @@ class wpdb {
 			mysql_query( "SET SESSION sql_mode='$modes_str'", $this->dbh );
 		}
 	}
-
-	/**
-	 * Sets the table prefix for the WordPress tables.
-	 *
-	 * @since 2.5.0
-	 *
-	 * @param string $prefix          Alphanumeric name for the new prefix.
-	 * @param bool   $set_table_names Optional. Whether the table names, e.g. wpdb::$posts, should be updated or not.
-	 * @return string|WP_Error Old prefix or WP_Error on error
-	 */
-/*	public function set_prefix( $prefix, $set_table_names = true ) {
-
-		if ( preg_match( '|[^a-z0-9_]|i', $prefix ) )
-			return new WP_Error('invalid_db_prefix', 'Invalid database prefix' );
-
-		$old_prefix = is_multisite() ? '' : $prefix;
-
-		if ( isset( $this->base_prefix ) )
-			$old_prefix = $this->base_prefix;
-
-		$this->base_prefix = $prefix;
-
-		if ( $set_table_names ) {
-			foreach ( $this->tables( 'global' ) as $table => $prefixed_table )
-				$this->$table = $prefixed_table;
-
-			if ( is_multisite() && empty( $this->blogid ) )
-				return $old_prefix;
-
-			$this->prefix = $this->get_blog_prefix();
-
-			foreach ( $this->tables( 'blog' ) as $table => $prefixed_table )
-				$this->$table = $prefixed_table;
-
-			foreach ( $this->tables( 'old' ) as $table => $prefixed_table )
-				$this->$table = $prefixed_table;
-		}
-		return $old_prefix;
-	}*/
-
-	/**
-	 * Sets blog id.
-	 *
-	 * @since 3.0.0
-	 * @access public
-	 *
-	 * @param int $blog_id
-	 * @param int $site_id Optional.
-	 * @return int previous blog id
-	 */
-/*	public function set_blog_id( $blog_id, $site_id = 0 ) {
-		if ( ! empty( $site_id ) )
-			$this->siteid = $site_id;
-
-		$old_blog_id  = $this->blogid;
-		$this->blogid = $blog_id;
-
-		$this->prefix = $this->get_blog_prefix();
-
-		foreach ( $this->tables( 'blog' ) as $table => $prefixed_table )
-			$this->$table = $prefixed_table;
-
-		foreach ( $this->tables( 'old' ) as $table => $prefixed_table )
-			$this->$table = $prefixed_table;
-
-		return $old_blog_id;
-	}*/
-
-	/**
-	 * Gets blog prefix.
-	 *
-	 * @since 3.0.0
-	 * @param int $blog_id Optional.
-	 * @return string Blog prefix.
-	 */
-/*	public function get_blog_prefix( $blog_id = null ) {
-		if ( is_multisite() ) {
-			if ( null === $blog_id )
-				$blog_id = $this->blogid;
-			$blog_id = (int) $blog_id;
-			if ( defined( 'MULTISITE' ) && ( 0 == $blog_id || 1 == $blog_id ) )
-				return $this->base_prefix;
-			else
-				return $this->base_prefix . $blog_id . '_';
-		} else {
-			return $this->base_prefix;
-		}
-	}*/
-
-	/**
-	 * Returns an array of WordPress tables.
-	 *
-	 * Also allows for the CUSTOM_USER_TABLE and CUSTOM_USER_META_TABLE to
-	 * override the WordPress users and usermeta tables that would otherwise
-	 * be determined by the prefix.
-	 *
-	 * The scope argument can take one of the following:
-	 *
-	 * 'all' - returns 'all' and 'global' tables. No old tables are returned.
-	 * 'blog' - returns the blog-level tables for the queried blog.
-	 * 'global' - returns the global tables for the installation, returning multisite tables only if running multisite.
-	 * 'ms_global' - returns the multisite global tables, regardless if current installation is multisite.
-	 * 'old' - returns tables which are deprecated.
-	 *
-	 * @since 3.0.0
-	 * @uses wpdb::$tables
-	 * @uses wpdb::$old_tables
-	 * @uses wpdb::$global_tables
-	 * @uses wpdb::$ms_global_tables
-	 *
-	 * @param string $scope   Optional. Can be all, global, ms_global, blog, or old tables. Defaults to all.
-	 * @param bool   $prefix  Optional. Whether to include table prefixes. Default true. If blog
-	 *                        prefix is requested, then the custom users and usermeta tables will be mapped.
-	 * @param int    $blog_id Optional. The blog_id to prefix. Defaults to wpdb::$blogid. Used only when prefix is requested.
-	 * @return array Table names. When a prefix is requested, the key is the unprefixed table name.
-	 */
-/*	public function tables( $scope = 'all', $prefix = true, $blog_id = 0 ) {
-		switch ( $scope ) {
-			case 'all' :
-				$tables = array_merge( $this->global_tables, $this->tables );
-				if ( is_multisite() )
-					$tables = array_merge( $tables, $this->ms_global_tables );
-				break;
-			case 'blog' :
-				$tables = $this->tables;
-				break;
-			case 'global' :
-				$tables = $this->global_tables;
-				if ( is_multisite() )
-					$tables = array_merge( $tables, $this->ms_global_tables );
-				break;
-			case 'ms_global' :
-				$tables = $this->ms_global_tables;
-				break;
-			case 'old' :
-				$tables = $this->old_tables;
-				break;
-			default :
-				return array();
-		}
-
-		if ( $prefix ) {
-			if ( ! $blog_id )
-				$blog_id = $this->blogid;
-			$blog_prefix = $this->get_blog_prefix( $blog_id );
-			$base_prefix = $this->base_prefix;
-			$global_tables = array_merge( $this->global_tables, $this->ms_global_tables );
-			foreach ( $tables as $k => $table ) {
-				if ( in_array( $table, $global_tables ) )
-					$tables[ $table ] = $base_prefix . $table;
-				else
-					$tables[ $table ] = $blog_prefix . $table;
-				unset( $tables[ $k ] );
-			}
-
-			if ( isset( $tables['users'] ) && defined( 'CUSTOM_USER_TABLE' ) )
-				$tables['users'] = CUSTOM_USER_TABLE;
-
-			if ( isset( $tables['usermeta'] ) && defined( 'CUSTOM_USER_META_TABLE' ) )
-				$tables['usermeta'] = CUSTOM_USER_META_TABLE;
-		}
-
-		return $tables;
-	}*/
 
 	/**
 	 * Selects a database using the current database connection.
@@ -1316,18 +1145,6 @@ class wpdb {
 			$this->check_current_query = true;
 			return false;
 		}
-
-		/**
-		 * Filters the database query.
-		 *
-		 * Some queries are made before the plugins have been loaded,
-		 * and thus cannot be filtered with this method.
-		 *
-		 * @since 2.1.0
-		 *
-		 * @param string $query Database query.
-		 */
-		$query = apply_filters( 'query', $query );
 
 		$this->flush();
 
@@ -1994,21 +1811,7 @@ class wpdb {
 	protected function get_table_charset( $table ) {
 		$tablekey = strtolower( $table );
 
-		/**
-		 * Filters the table charset value before the DB is checked.
-		 *
-		 * Passing a non-null value to the filter will effectively short-circuit
-		 * checking the DB for the charset, returning that value instead.
-		 *
-		 * @since 4.2.0
-		 *
-		 * @param string $charset The character set to use. Default null.
-		 * @param string $table   The name of the table being checked.
-		 */
-		$charset = apply_filters( 'pre_get_table_charset', null, $table );
-		if ( null !== $charset ) {
-			return $charset;
-		}
+		$charset = null;
 
 		if ( isset( $this->table_charset[ $tablekey ] ) ) {
 			return $this->table_charset[ $tablekey ];
@@ -2098,22 +1901,7 @@ class wpdb {
 		$tablekey = strtolower( $table );
 		$columnkey = strtolower( $column );
 
-		/**
-		 * Filters the column charset value before the DB is checked.
-		 *
-		 * Passing a non-null value to the filter will short-circuit
-		 * checking the DB for the charset, returning that value instead.
-		 *
-		 * @since 4.2.0
-		 *
-		 * @param string $charset The character set to use. Default null.
-		 * @param string $table   The name of the table being checked.
-		 * @param string $column  The name of the column being checked.
-		 */
-		$charset = apply_filters( 'pre_get_col_charset', null, $table, $column );
-		if ( null !== $charset ) {
-			return $charset;
-		}
+		$charset = null;
 
 		// Skip this entirely if this isn't a MySQL database.
 		if ( empty( $this->is_mysql ) ) {

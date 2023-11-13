@@ -2,8 +2,8 @@
 
 License: GPLv3
 
-This is a port of the EWWW Image Optimizer plugin for WordPress that reduces image sizes in standalone (SILO) mode using lossless/lossy methods and image format conversion. It is currently in Alpha status, and contains copious amount of the WP code still. Some of that is intential, like the port of the wpdb class to interface with SQLite3/MySQL, but some just needs cleaning.
-SILO edition is a PHP application that will optimize your images from the command-line. It can re-compress your images, will eventually be able to convert your images automatically to the file format that will produce the smallest image size, and can currently apply lossy compression to achieve huge savings for PNG and JPG images.
+This is a port of the EWWW Image Optimizer plugin for WordPress that reduces image sizes in standalone (SILO) mode using lossless/lossy methods and WebP conversion. It is currently in Alpha status, and contains copious amount of the WP code still. Some of that is intential, like the port of the wpdb class to interface with SQLite3/MySQL, but some just needs cleaning.
+SILO edition is a PHP application that will optimize your images from the command-line. It can re-compress your images, convert them to WebP and can apply lossy compression to achieve huge savings for PNG and JPG images.
 
 To use, copy config.sample.php to config.php and edit to your needs, then run cli.php from the command line.
 
@@ -13,11 +13,11 @@ To use, copy config.sample.php to config.php and edit to your needs, then run cl
 2. **Faster backups.** Smaller image sizes also means faster backups.
 3. **Less bandwidth usage.** Optimizing your images can save you hundreds of KB per image, which means significantly less bandwidth usage.
 4. **Super fast.** EWWW IO can run on your own server, so you don’t have to wait for a third party service to receive, process, and return your images. You can optimize hundreds of images in just a few minutes. PNG files take the longest, but you can adjust the settings for your situation.
-5. **Best JPG optimization.** With TinyJPG integration, nothing else comes close (requires an API subscription).
+5. **Best JPG optimization.** With Compress API integration, nothing else comes close (requires a subscription or credit purchase at https://ewww.io/plans/).
 6. **Best PNG optimization.** You can use optipng and pngquant together. And if that isn't enough, try the lossy PNG option powered by the Compress API.
 7. **Root access not needed** Pre-compiled binaries are made available to install directly within the EWWW IO folder, and cloud-based optimization is provided for those who cannot run the binaries locally (or if you want better compression).
 
-By default, EWWW Image Optimizer uses lossless optimization techniques, so your image quality will be exactly the same before and after the optimization. The only thing that will change is your file size. The one small exception to this is GIF animations. While the optimization is technically lossless, you will not be able to properly edit the animation again without performing an --unoptimize operation with gifsicle. The gif2png and jpg2png conversions are also lossless but the png2jpg process is not lossless. The lossy optimization for JPG and PNG files uses sophisticated algorithms to minimize perceptual quality loss, which is vastly different than setting a static quality/compression level.
+By default, EWWW Image Optimizer uses lossless optimization techniques, so your image quality will be exactly the same before and after the optimization. The only thing that will change is your file size. The one small exception to this is GIF animations. While the optimization is technically lossless, you will not be able to properly edit the animation again without performing an --unoptimize operation with gifsicle. The lossy optimization for JPG and PNG files uses sophisticated algorithms to minimize perceptual quality loss, which is vastly different than setting a static quality/compression level.
 
 EWWW Image Optimizer calls optimization utilities directly which is well suited to shared hosting situations where these utilities may already be installed. Pre-compiled binaries/executables are provided for optipng, gifsicle, pngquant, cwebp, and jpegtran. If local optimization doesn't work on your server, the [Compress API](https://ewww.io/plans/) will work for any site.
 
@@ -70,9 +70,21 @@ http://developer.yahoo.com/performance/rules.html#opt_images
 https://developers.google.com/speed/docs/best-practices/payload#CompressImages  
 https://developers.google.com/speed/docs/insights/OptimizeImages
 
-TinyJPG/TinyPNG, JPEGmini, and Pngquant were recommended by EWWW IO users. Pngout (usually) optimizes better than Optipng, and best when they are used together. TinyJPG is the best lossy compression tool that I have found for JPG images. Pngquant is an excellent lossy optimizer for PNGs, and is one of the tools used by TinyPNG.
+TinyJPG/TinyPNG and Pngquant were recommended by EWWW IO users. TinyJPG is the best lossy compression tool that I have found for JPG images. Pngquant is an excellent lossy optimizer for PNGs, and is one of the tools used by TinyPNG.
 
 ## Changelog
+
+### 1.0
+* Massive amount of code cleanup and restructuring
+* Fixed: metadata not removed, and ewww_image_optimizer_remove_meta option renamed to ewww_image_optimizer_metadata_remove
+* Added Animated PNG handling
+* Added ewww_image_optimizer_webp_quality setting, defaults to 75
+* Added ewww_image_optimizer_sharpen setting to improve WebP clarity
+* Added ewww_image_optimizer_lossy_png2webp for more savings when converting PNG to WebP
+* Added WebP generation via Imagick or GD (if available)
+* Preserve metadata in WebP images if ewww_image_optimizer_metadata_remove is disabled
+* Preserve ICC profiles for WebP conversion and normalize ICC profiles on CMYK images
+* Improved transparency detection for PNG images
 
 ### 0.60
 * Updated binaries: jpegtran 9d, optipng 0.7.7, gifsicle 1.93, pngquant 2.17.0, and cwebp 1.2.0
