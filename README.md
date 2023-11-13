@@ -2,7 +2,7 @@
 
 License: GPLv3
 
-This is a port of the EWWW Image Optimizer plugin for WordPress that reduces image sizes in standalone (SILO) mode using lossless/lossy methods and WebP conversion. It is currently in Alpha status, and contains copious amount of the WP code still. Some of that is intential, like the port of the wpdb class to interface with SQLite3/MySQL, but some just needs cleaning.
+This is a port of the EWWW Image Optimizer plugin for WordPress that reduces image sizes in standalone (SILO) mode using lossless/lossy methods and WebP conversion.
 SILO edition is a PHP application that will optimize your images from the command-line. It can re-compress your images, convert them to WebP and can apply lossy compression to achieve huge savings for PNG and JPG images.
 
 To use, copy config.sample.php to config.php and edit to your needs, then run cli.php from the command line.
@@ -17,7 +17,7 @@ To use, copy config.sample.php to config.php and edit to your needs, then run cl
 6. **Best PNG optimization.** You can use optipng and pngquant together. And if that isn't enough, try the lossy PNG option powered by the Compress API.
 7. **Root access not needed** Pre-compiled binaries are made available to install directly within the EWWW IO folder, and cloud-based optimization is provided for those who cannot run the binaries locally (or if you want better compression).
 
-By default, EWWW Image Optimizer uses lossless optimization techniques, so your image quality will be exactly the same before and after the optimization. The only thing that will change is your file size. The one small exception to this is GIF animations. While the optimization is technically lossless, you will not be able to properly edit the animation again without performing an --unoptimize operation with gifsicle. The lossy optimization for JPG and PNG files uses sophisticated algorithms to minimize perceptual quality loss, which is vastly different than setting a static quality/compression level.
+By default, EWWW Image Optimizer uses lossless optimization techniques, so your image quality will be exactly the same before and after the optimization. The only thing that will change is your file size. The lossy optimization for JPG and PNG files uses sophisticated algorithms to minimize perceptual quality loss, which is vastly different than setting a static quality/compression level.
 
 EWWW Image Optimizer calls optimization utilities directly which is well suited to shared hosting situations where these utilities may already be installed. Pre-compiled binaries/executables are provided for optipng, gifsicle, pngquant, cwebp, and jpegtran. If local optimization doesn't work on your server, the [Compress API](https://ewww.io/plans/) will work for any site.
 
