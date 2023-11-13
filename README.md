@@ -74,6 +74,10 @@ TinyJPG/TinyPNG and Pngquant were recommended by EWWW IO users. TinyJPG is the b
 
 ## Changelog
 
+### 1.01
+* Improve handling of API errors
+* Fixed missing primary key for MySQL
+
 ### 1.0
 * Massive amount of code cleanup and restructuring
 * Fixed: metadata not removed, and ewww_image_optimizer_remove_meta option renamed to ewww_image_optimizer_metadata_remove

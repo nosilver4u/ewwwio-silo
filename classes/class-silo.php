@@ -77,7 +77,7 @@ final class SILO extends Base {
 	}
 
 	public static function setup_constants() {
-		define( 'EWWW_IMAGE_OPTIMIZER_VERSION', 1000 );
+		define( 'EWWW_IMAGE_OPTIMIZER_VERSION', 1001 );
 		// For textdomain functions, should be removed.
 		define( 'EWWW_IMAGE_OPTIMIZER_DOMAIN', 'ewww-image-optimizer' );
 		// this is the path of the plugin file relative to the plugins/ folder
@@ -303,11 +303,6 @@ final class SILO extends Base {
 		$this->cloud_init();
 		// Setup local binaries if we're not using the API for everything.
 		$this->exec_init();
-		if ( ! class_exists( 'SQLite3' ) && ! defined( 'DB_NAME' ) ) {
-			// TODO: simulate this to test it out!
-			//$this->cloud_init();
-			//ewww_image_optimizer_cloud_verify(); //run it again to override defaults if necessary?
-		}
 	}
 
 	/**

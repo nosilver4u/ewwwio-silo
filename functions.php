@@ -53,8 +53,11 @@ function ewww_image_optimizer_cloud_verify( $cache = true, $api_key = '' ) {
 	if ( $result->success && ! empty( $result->body ) && preg_match( '/(great|exceeded)/', $result->body ) ) {
 		$verified = $result->body;
 		ewwwio_debug_message( "verification success" );
+	} elseif ( ! $result->success ) {
+		$error_message = $result->status_code . ' HTTP status code';
+		ewwwio()->warning( "API verification failed: $error_message" );
 	} else {
-		ewwwio_debug_message( "verification failed" );
+		ewwwio()->warning( 'API verification failed with unknown response, use --debug to view response' );
 		ewwwio_debug_message( print_r( $result, true ) );
 	}
 	if ( $verified ) {
@@ -99,7 +102,11 @@ function ewww_image_optimizer_cloud_quota() {
 		ewwwio()->warning( "quota request failed: $error_message" );
 		return '';
 	}
-	if ( $result->success && ! empty( $result->body ) ) {
+	if ( ! $result->success ) {
+		$error_message = $result->status_code . ' HTTP status code';
+		ewwwio()->warning( "quota request failed: $error_message" );
+		return '';
+	} elseif ( ! empty( $result->body ) ) {
 		ewwwio_debug_message( "quota data retrieved: " . $result->body );
 		$quota = json_decode( $result->body, true );
 		if ( ! is_array( $quota ) ) {
@@ -296,7 +303,8 @@ function ewww_image_optimizer_cloud_optimizer( $file, $type, $convert = 0, $newf
 	}
 
 	if ( ! $response->success ) {
-		ewwwio()->warning( 'Unknown API error, contact support' );
+		$error_message = $response->status_code . ' HTTP status code';
+		ewwwio()->warning( "API error: $error_message" );
 		return array( $file, 'cloud optimize failed', 0 );
 	} elseif ( empty( $response->body ) ) {
 		ewwwio_debug_message( 'cloud results: no savings' );
@@ -768,7 +776,7 @@ function ewww_image_optimizer_install_mysql_table() {
 		updates int(5) unsigned,
 		updated timestamp DEFAULT '0000-00-00 00:00:00' ON UPDATE CURRENT_TIMESTAMP,
 		trace blob,
-		UNIQUE KEY id (id),
+		PRIMARY KEY (id),
 		KEY path_image_size (path(191),image_size)
 	) $charset_collate;";
 
